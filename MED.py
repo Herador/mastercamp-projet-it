@@ -1,3 +1,4 @@
+from creation_graphe import graph
 # Fonction pour récupérer la liste des sommets du graphe
 def liste_sommets(graphe):
     # On retourne simplement les clés du dictionnaire, qui représentent les sommets
@@ -69,10 +70,10 @@ graphe = {
 }
 
 # Exécution de l'algorithme de Kruskal
-arbre = kruskal(graphe)
+arbre = kruskal(graph)
 
 # Affichage des résultats
-print("Sommets :", liste_sommets(graphe))
+print("Sommets :", liste_sommets(graph))
 print("Arbre couvrant minimal (Kruskal) :")
 poids_total = 0
 for s1, s2, poids in arbre:
