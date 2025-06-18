@@ -18,7 +18,7 @@ def creer_liste_aretes(graphe):
                 aretes.append(arete)
     return aretes
 
-# Fonction DFS pour explorer les connexions
+# Fonction DFS(parcours en profondeur) pour explorer les connexions
 def dfs(graphe, sommet_depart, visites):
     visites.add(sommet_depart)
     for s1, s2, poids in graphe:
