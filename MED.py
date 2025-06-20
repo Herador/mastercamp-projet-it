@@ -1,4 +1,12 @@
 from creation_graphe import graph
+
+def est_connexe(graphe):
+    aretes = creer_liste_aretes(graphe)  # Conversion du dictionnaire vers liste d’arêtes
+    visites = set()
+    sommets = liste_sommets(graphe)
+    dfs(aretes, sommets[0], visites)  # On utilise ta fonction DFS existante
+    return len(visites) == len(sommets)
+
 # Fonction pour récupérer la liste des sommets du graphe
 def liste_sommets(graphe):
     # On retourne simplement les clés du dictionnaire, qui représentent les sommets
