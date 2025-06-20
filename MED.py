@@ -1,5 +1,3 @@
-from creation_graphe import graph
-
 def est_connexe(graphe):
     aretes = creer_liste_aretes(graphe)  # Conversion du dictionnaire vers liste d’arêtes
     visites = set()
@@ -43,6 +41,7 @@ def dfs(graphe, sommet_depart, visites):
         if voisin:
             dfs(graphe, voisin, visites)
 
+
 # Vérifie si l'ajout d'une arête créerait un cycle dans l'arbre partiel
 def est_acyclique(graphe, sommet1, sommet2):
     visites = set()  # Ensemble des sommets visités
@@ -67,6 +66,7 @@ def kruskal(graphe):
 
     return arbre  # On retourne l’arbre couvrant minimal
 
+
 # Définition du graphe sous forme de dictionnaire d’adjacence
 graphe = {
     's1': {'s2': 7, 's5': 6, 's6': 2},
@@ -76,12 +76,16 @@ graphe = {
     's5': {'s1': 6, 's2': 5, 's3': 2, 's4': 3, 's6': 1},
     's6': {'s1': 2, 's5': 1}
 }
-
 # Exécution de l'algorithme de Kruskal
-arbre = kruskal(graph)
+arbre = kruskal(graphe)
 
 # Affichage des résultats
-print("Sommets :", liste_sommets(graph))
+if est_connexe(graphe):
+    print("Le graphe est connexe.")
+else:
+    print("Le graphe n'est pas connexe.")
+
+print("Sommets :", liste_sommets(graphe))
 print("Arbre couvrant minimal (Kruskal) :")
 poids_total = 0
 for s1, s2, poids in arbre:
