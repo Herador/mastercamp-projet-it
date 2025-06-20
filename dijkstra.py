@@ -1,4 +1,5 @@
 import math
+from graph import graph
 
 # Fonction pour initialiser les distances
 def init_plus_court_chemin(s, graphe):
@@ -37,10 +38,10 @@ graphe = {
     's6': {'s1': 2, 's5': 1}
 }
 
-source = 's1'
-distances = dijkstra(graphe, source)
+source = 'Châtelet'
+distances = dijkstra(graph, source)
 
 # Affichage des résultats
 print(f"Plus courts chemins depuis {source} :")
-for noeud in graphe:
+for noeud in graph:
     print(f"{source} → {noeud} = {distances[noeud]}")
