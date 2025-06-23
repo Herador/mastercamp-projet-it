@@ -1,5 +1,8 @@
 import math
-from graph import graph
+from stop import Stop
+import pickle
+from MetroGraph import MetroGraph
+#from graph import graph
 
 # Fonction pour initialiser les distances
 def init_plus_court_chemin(s, graphe):
@@ -28,20 +31,15 @@ def dijkstra(graphe, s):
             relaxation(graphe, x, y, d)
     return d
 
-# Exemple d'utilisation
-graphe = {
-    's1': {'s2': 7, 's5': 6, 's6': 2},
-    's2': {'s1': 7, 's3': 4, 's5': 5},
-    's3': {'s2': 4, 's4': 1, 's5': 2},
-    's4': {'s3': 1, 's5': 3},
-    's5': {'s1': 6, 's2': 5, 's3': 2, 's4': 3, 's6': 1},
-    's6': {'s1': 2, 's5': 1}
-}
+# Test
+with open("metro_graph.pkl", "rb") as f:
+    metroGraph = pickle.load(f)
 
-source = 'Châtelet'
-distances = dijkstra(graph, source)
+
+source = metroGraph.get_stops_by_name('Châtelet')[0]
+distances = dijkstra(metroGraph.graph, source)
 
 # Affichage des résultats
 print(f"Plus courts chemins depuis {source} :")
-for noeud in graph:
+for noeud in metroGraph.graph:
     print(f"{source} → {noeud} = {distances[noeud]}")

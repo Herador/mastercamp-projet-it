@@ -66,26 +66,23 @@ def kruskal(graphe):
 
     return arbre  # On retourne l’arbre couvrant minimal
 
+# Test
+import pickle
+from MetroGraph import MetroGraph
 
-# Définition du graphe sous forme de dictionnaire d’adjacence
-graphe = {
-    's1': {'s2': 7, 's5': 6, 's6': 2},
-    's2': {'s1': 7, 's3': 4, 's5': 5},
-    's3': {'s2': 4, 's4': 1, 's5': 2},
-    's4': {'s3': 1, 's5': 3},
-    's5': {'s1': 6, 's2': 5, 's3': 2, 's4': 3, 's6': 1},
-    's6': {'s1': 2, 's5': 1}
-}
+with open("metro_graph.pkl", "rb") as f:
+    metroGraph = pickle.load(f)
+
 # Exécution de l'algorithme de Kruskal
-arbre = kruskal(graphe)
+arbre = kruskal(metroGraph.graph)
 
 # Affichage des résultats
-if est_connexe(graphe):
+if est_connexe(metroGraph.graph):
     print("Le graphe est connexe.")
 else:
     print("Le graphe n'est pas connexe.")
 
-print("Sommets :", liste_sommets(graphe))
+print("Sommets :", liste_sommets(metroGraph.graph))
 print("Arbre couvrant minimal (Kruskal) :")
 poids_total = 0
 for s1, s2, poids in arbre:
