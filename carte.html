@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Carte EFREI Dodo</title>
+  <!-- On importe le style de la carte Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- On importe une police d'écriture sympa depuis Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Klee+One&display=swap" rel="stylesheet" />
+  <!-- On importe notre propre fichier de styles (couleurs, formes...) -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <!-- C'est ici que la carte va s'afficher -->
+    <div id="map"></div>
+
+    <!-- La boîte bleue en bas avec le formulaire pour entrer les stations -->
+    <div class="bottom-blue small" id="blue-box">
+      <div class="form-box" id="form-box">
+        <p class="form-title">On va où ?</p>
+        <!-- Champ texte pour la station de départ -->
+        <input type="text" id="depart" placeholder="Départ" autocomplete="off" />
+        <!-- Champ texte pour la station d'arrivée -->
+        <input type="text" id="arrivee" placeholder="Arrivée" autocomplete="off" />
+        <!-- Ici s'afficheront les propositions automatiques de stations -->
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+      <!-- Bouton de recherche, caché au départ -->
+      <button id="search-btn" class="search-button" style="display: none;">Recherche</button>
+    </div>
+  </div>
+
+  <!-- On importe le script de Leaflet pour afficher la carte -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Liste des noms des stations que l'on propose dans le formulaire
+    const stations = [
+      "Château Rouge", "Château D'eau", "Château de Vincennes", "Château-Landon",
+      "Châtelet Les Halles", "Gare de Lyon", "Nation", "Porte de Clignancourt", "Place d'Italie",
+      "Montparnasse-Bienvenue", "Bastille", "Gare du Nord", "République", "Opéra",
+      "La Défense", "Saint-Lazare", "Pyrénées", "Jaurès", "Barbès-Rochechouart", "Odéon"
+    ];
+
+    // On crée la carte centrée sur Paris avec un zoom adapté
+    const map = L.map('map').setView([48.857, 2.35], 13);
+    // On ajoute les tuiles OpenStreetMap pour afficher la carte
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors', maxZoom: 18
+    }).addTo(map);
+
+    // On récupère les éléments du formulaire pour pouvoir les manipuler avec le code
+    const departInput = document.getElementById("depart");
+    const arriveeInput = document.getElementById("arrivee");
+    const suggestionsBox = document.getElementById("suggestions");
+    const blueBox = document.getElementById("blue-box");
+    const searchBtn = document.getElementById("search-btn");
+
+    // Cette variable sert à savoir sur quel champ l'utilisateur est en train d'écrire (départ ou arrivée)
+    let currentField = null;
+
+    // Cette fonction affiche les suggestions de stations correspondant à ce que l'utilisateur tape
+    function showSuggestions(input) {
+      // On récupère ce que l'utilisateur écrit, en minuscules pour simplifier la recherche
+      const query = input.value.toLowerCase();
+      // On cherche dans la liste des stations celles qui contiennent ce texte
+      const results = stations.filter(station => station.toLowerCase().includes(query));
+      // On vide les suggestions précédentes pour mettre à jour
+      suggestionsBox.innerHTML = "";
+
+      // Pour chaque station trouvée, on crée un petit élément à cliquer
+      results.forEach(station => {
+        const div = document.createElement("div");
+        div.className = "suggestion-item"; // classe pour le style CSS
+        div.textContent = station; // on met le nom de la station
+        // Quand on clique sur une suggestion, on remplit le champ avec cette station
+        div.onclick = () => {
+          input.value = station;
+          suggestionsBox.innerHTML = ""; // on vide les suggestions
+          // On réduit la taille de la boîte bleue pour revenir à la normale
+          blueBox.classList.remove("large");
+          // On remet les deux champs visibles
+          arriveeInput.style.display = "block";
+          departInput.style.display = "block";
+          // On vérifie si les deux champs sont remplis pour afficher le bouton "Recherche"
+          checkInputs();
+        };
+        // On ajoute cet élément dans la boîte des suggestions
+        suggestionsBox.appendChild(div);
+      });
+    }
+
+    // Cette fonction regarde si les deux champs sont remplis pour montrer ou cacher le bouton "Recherche"
+    function checkInputs() {
+      if (departInput.value && arriveeInput.value) {
+        searchBtn.style.display = "block"; // on affiche le bouton
+      } else {
+        searchBtn.style.display = "none"; // on cache le bouton
+      }
+    }
+
+    // Quand l'utilisateur clique sur le champ "Départ"
+    departInput.addEventListener("focus", () => {
+      currentField = "depart"; // on dit que c'est ce champ qui est actif
+      blueBox.classList.add("large"); // on agrandit la boîte bleue
+      arriveeInput.style.display = "none"; // on cache le champ "Arrivée" pour plus de place
+      showSuggestions(departInput); // on affiche les suggestions pour le départ
+    });
+
+    // Quand l'utilisateur clique sur le champ "Arrivée"
+    arriveeInput.addEventListener("focus", () => {
+      currentField = "arrivee"; // on dit que c'est ce champ qui est actif
+      blueBox.classList.add("large"); // on agrandit la boîte bleue
+      departInput.style.display = "none"; // on cache le champ "Départ"
+      showSuggestions(arriveeInput); // on affiche les suggestions pour l'arrivée
+    });
+
+    // Quand l'utilisateur écrit dans le champ "Départ"
+    departInput.addEventListener("input", () => {
+      if (currentField === "depart") showSuggestions(departInput); // on met à jour les suggestions
+      checkInputs(); // on vérifie si on peut afficher le bouton "Recherche"
+    });
+
+    // Quand l'utilisateur écrit dans le champ "Arrivée"
+    arriveeInput.addEventListener("input", () => {
+      if (currentField === "arrivee") showSuggestions(arriveeInput); // on met à jour les suggestions
+      checkInputs(); // on vérifie si on peut afficher le bouton "Recherche"
+    });
+
+    // Quand l'utilisateur clique quelque part ailleurs sur la page (hors du formulaire)
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".form-box")) {
+        // On vide les suggestions, on remet les deux champs visibles
+        suggestionsBox.innerHTML = "";
+        arriveeInput.style.display = "block";
+        departInput.style.display = "block";
+        // On remet la boîte bleue à sa taille normale
+        blueBox.classList.remove("large");
+      }
+    });
+  </script>
+</body>
+</html>
