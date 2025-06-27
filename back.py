@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 #from stop import Stop
 import pickle
+from flask_cors import CORS
 
 with open("metro_graph.pkl", "rb") as f:
     metroGraph = pickle.load(f)
@@ -65,5 +66,5 @@ def get_shortest_path():
     end = request.args.get("to", "").lower()
 '''
 
-
+CORS(app)
 app.run(host='0.0.0.0', port=80)
