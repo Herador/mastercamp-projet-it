@@ -16,4 +16,12 @@ class Stop:
     
     def __lt__(self, other):
         return self.id < other.id
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "lat": self.lat,
+            "lon": self.lon
+        }
 
