@@ -1,7 +1,10 @@
 import math
-from stop import Stop
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from data.stop import Stop
 import pickle
-from MetroGraph import MetroGraph
+from data.MetroGraph import MetroGraph
 #from graph import graph
 
 # Fonction pour initialiser les distances
@@ -32,7 +35,7 @@ def dijkstra(graphe, s):
     return d
 
 # Test
-with open("metro_graph.pkl", "rb") as f:
+with open("data/metro_graph.pkl", "rb") as f:
     metroGraph = pickle.load(f)
 
 

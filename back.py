@@ -1,9 +1,15 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+
 from flask import Flask, jsonify, request
 #from stop import Stop
 import pickle
 from flask_cors import CORS
+from data.MetroGraph import MetroGraph
 
-with open("metro_graph.pkl", "rb") as f:
+path = os.path.join(os.path.dirname(__file__), "data", "metro_graph.pkl")
+with open(path, "rb") as f:
     metroGraph = pickle.load(f)
 
 app = Flask(__name__)

@@ -68,7 +68,7 @@ def kruskal(graphe):
 
 # Test
 import pickle
-from MetroGraph import MetroGraph
+from data.MetroGraph import MetroGraph
 
 with open("metro_graph.pkl", "rb") as f:
     metroGraph = pickle.load(f)
