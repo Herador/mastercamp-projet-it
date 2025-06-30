@@ -19,12 +19,12 @@ body {
 
 .train-image {
   max-width: 200px;
-  margin-bottom: 30px;
+  margin-bottom: 15px;
 }
 
-.welcome-text {
-  font-size: 18px;
-  margin-bottom: 20px;
+.welcome {
+  font-size: 24px;
+  margin-bottom: 50px;
   line-height: 1.5;
 }
 
@@ -33,7 +33,7 @@ body {
   color: #0078c8;
   border: none;
   padding: 10px 20px;
-  font-size: 16px;
+  font-size: 24px;
   border-radius: 15px;
   text-decoration: none;
   transition: 0.3s;
@@ -46,25 +46,21 @@ body {
 /* Pour la carte en plein écran avec panneau latéral */
 .container {
   display: flex;
-  flex-direction: row;
+  flex-direction: row; /* Important */
   height: 100vh;
-  width: 100vw;
-  margin: 0;
-  padding: 0;
 }
 
-/* Carte Leaflet à droite */
+/* Carte Leaflet */
 #map {
   flex: 1;
   height: 100%;
 }
 
-/* Colonne bleue à gauche */
+/* Colonne bleue */
 .bottom-blue {
   width: 300px;
   background-color: #0078c8;
   padding: 40px 20px;
-  display: flex;
   flex-direction: column;
   align-items: center;
   color: white;
@@ -147,4 +143,12 @@ body {
 
 .search-button {
   display: none; /* Caché au chargement */
+}
+
+
+.logo {
+  color: white;
+  font-size: 72px;
+  margin: 0 0 40px 0;
+  text-align: center;
 }
