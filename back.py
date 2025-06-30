@@ -6,6 +6,7 @@ from flask import Flask, jsonify, request
 #from stop import Stop
 import pickle
 from flask_cors import CORS
+from flask import render_template
 from data.MetroGraph import MetroGraph
 
 path = os.path.join(os.path.dirname(__file__), "data", "metro_graph.pkl")
@@ -16,7 +17,11 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return 'Hello, World!'
+    return render_template("accueil.html")
+
+@app.route("/carte")
+def show_carte():
+    return render_template("carte.html")
 
 @app.route("/stops")
 def get_stops():
