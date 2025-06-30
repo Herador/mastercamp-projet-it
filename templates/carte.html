@@ -82,13 +82,13 @@
       });
     }
 
-    function checkInputs() {
-      if (departInput.value && arriveeInput.value) {
-        searchBtn.disabled = false;
-      } else {
-        searchBtn.disabled = true;
-      }
-    }
+ function checkInputs() {
+  if (departInput.value.trim() && arriveeInput.value.trim()) {
+    searchBtn.style.display = "block";
+  } else {
+    searchBtn.style.display = "none";
+  }
+}
 
     departInput.addEventListener("focus", () => {
       currentInput = departInput;
