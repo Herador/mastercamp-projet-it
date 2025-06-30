@@ -8,17 +8,17 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <!-- Ta police sympa -->
   <link href="https://fonts.googleapis.com/css2?family=Klee+One&display=swap" rel="stylesheet" />
-  <!-- Feuille de style partagée -->
+  <!-- Feuille de style -->
   <link rel="stylesheet" href="../static/styles.css" />
 </head>
 <body>
   <div class="container">
-    <!-- Carte -->
-    <div id="map"></div>
-
-    <!-- Boîte bleue avec le formulaire -->
+    
+    <!-- Bande bleue avec le formulaire (placée AVANT) -->
     <div class="bottom-blue small" id="blue-box">
+      <h1 class="logo">MED</h1>
       <div class="form-box" id="form-box">
+        
         <p class="form-title">On va où ?</p>
         <input type="text" id="depart" placeholder="Départ" autocomplete="off" />
         <input type="text" id="arrivee" placeholder="Arrivée" autocomplete="off" />
@@ -26,6 +26,9 @@
       </div>
       <button id="search-btn" class="search-button" disabled>Recherche</button>
     </div>
+
+    <!-- Carte Leaflet à droite -->
+    <div id="map"></div>
   </div>
 
   <!-- Script Leaflet -->
@@ -39,9 +42,10 @@
     ];
 
     const map = L.map('map').setView([48.857, 2.35], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 18
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '',  // On vide l'attribution
+      maxZoom: 18,
+      detectRetina: true
     }).addTo(map);
 
     fetch('http://localhost/stops')
@@ -82,14 +86,13 @@
       });
     }
 
- function checkInputs() {
-  if (departInput.value.trim() && arriveeInput.value.trim()) {
-    searchBtn.style.display = "block";
-  } else {
-    searchBtn.style.display = "none";
-  }
-}
-
+    function checkInputs() {
+      if (departInput.value.trim() && arriveeInput.value.trim()) {
+        searchBtn.style.display = "block";
+      } else {
+        searchBtn.style.display = "none";
+      }
+    }
 
     departInput.addEventListener("focus", () => {
       currentInput = departInput;
