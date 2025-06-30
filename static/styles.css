@@ -130,10 +130,10 @@ body {
 /* Bouton recherche */
 .search-button {
   margin-top: 20px;
-  background-color: white;
-  color: #0078c8;
+  background-color: #085A8C;
+  color: white;
   border: none;
-  padding: 10px 18px;
+  padding: 10px 110px;
   font-size: 16px;
   border-radius: 15px;
   cursor: pointer;
@@ -142,5 +142,9 @@ body {
 }
 
 .search-button:hover {
-  background-color: #e0e0e0;
+  background-color: #0b4264;
+}
+
+.search-button {
+  display: none; /* Caché au chargement */
 }
