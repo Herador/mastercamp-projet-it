@@ -44,14 +44,23 @@
       maxZoom: 18
     }).addTo(map);
 
+    const metroIcon = L.icon({
+  iconUrl: '../static/logo_metro.png', 
+  iconSize: [20, 15], 
+  iconAnchor: [16, 16],
+  popupAnchor: [0, -16]
+});
+
+
     fetch('http://localhost/stops')
       .then(response => response.json())
       .then(data => {
         data.forEach(stop => {
           if (stop.lat && stop.lon) {
-            L.marker([stop.lat, stop.lon])
-              .addTo(map)
-              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`);
+            L.marker([stop.lat, stop.lon], { icon: metroIcon })
+  .addTo(map)
+  .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`);
+
           }
         });
       })
