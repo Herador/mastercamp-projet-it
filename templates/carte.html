@@ -24,7 +24,9 @@
         <input type="text" id="arrivee" placeholder="Arrivée" autocomplete="off" />
         <div class="suggestions" id="suggestions"></div>
       </div>
-      <button id="search-btn" class="search-button" disabled>Recherche</button>
+      <a href="/trajet" id="search-btn" class="search-button">Recherche</a>
+
+
     </div>
 
     <!-- Carte Leaflet à droite -->
@@ -100,6 +102,7 @@
       }
     }
 
+
     departInput.addEventListener("focus", () => {
       currentInput = departInput;
       showSuggestions(departInput);
@@ -125,6 +128,8 @@
         suggestionsBox.innerHTML = "";
       }
     });
+
+    
   </script>
 </body>
 </html>

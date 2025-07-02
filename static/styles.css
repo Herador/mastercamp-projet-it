@@ -135,6 +135,7 @@ body {
   cursor: pointer;
   font-family: 'Klee One', cursive;
   transition: background-color 0.3s;
+    text-decoration: none;
 }
 
 .search-button:hover {
