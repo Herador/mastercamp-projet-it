@@ -78,7 +78,7 @@
 
     function showSuggestions(input) {
       const query = input.value.toLowerCase();
-      const results = stopNames.filter(station => station.toLowerCase().includes(query));
+      const results = stopNames.filter(station => station.toLowerCase().startsWith(query));
       suggestionsBox.innerHTML = "";
 
       results.forEach(station => {
