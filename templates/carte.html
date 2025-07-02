@@ -34,12 +34,7 @@
   <!-- Script Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const stations = [
-      "Château Rouge", "Château D'eau", "Château de Vincennes", "Château-Landon",
-      "Châtelet Les Halles", "Gare de Lyon", "Nation", "Porte de Clignancourt", "Place d'Italie",
-      "Montparnasse-Bienvenue", "Bastille", "Gare du Nord", "République", "Opéra",
-      "La Défense", "Saint-Lazare", "Pyrénées", "Jaurès", "Barbès-Rochechouart", "Odéon"
-    ];
+    let stations = [];
 
     const map = L.map('map').setView([48.857, 2.35], 13);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -58,12 +53,13 @@
     fetch('http://localhost/stops')
       .then(response => response.json())
       .then(data => {
+        stations = data.map(stop => stop.name).filter(Boolean);  // on extrait les noms des arrêts
+
         data.forEach(stop => {
           if (stop.lat && stop.lon) {
             L.marker([stop.lat, stop.lon], { icon: metroIcon })
-  .addTo(map)
-  .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`);
-
+              .addTo(map)
+              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`);
           }
         });
       })
