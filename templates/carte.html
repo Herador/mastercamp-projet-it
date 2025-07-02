@@ -134,6 +134,23 @@
       localStorage.setItem("arrivee", arriveeInput.value);
     });
 
+
+      fetch("http://localhost/api/lines")
+  .then(response => response.json())
+  .then(lines => {
+    lines.forEach(line => {
+      const polyline = L.polyline(line.coordinates, {
+        color: line.color,
+        weight: 5,
+        opacity: 1,
+        lineJoin: 'round',
+      }).addTo(map);
+
+      polyline.bindPopup(line.name);
+    });
+  })
+  .catch(error => console.error("Erreur lors du chargement des lignes :", error));
+
   </script>
 </body>
 </html>
