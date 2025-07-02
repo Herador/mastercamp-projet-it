@@ -24,7 +24,9 @@
         <input type="text" id="arrivee" placeholder="Arrivée" autocomplete="off" />
         <div class="suggestions" id="suggestions"></div>
       </div>
-      <button id="search-btn" class="search-button" disabled>Recherche</button>
+      <a href="/trajet" id="search-btn" class="search-button">Recherche</a>
+
+
     </div>
 
     <!-- Carte Leaflet à droite -->
@@ -34,6 +36,7 @@
   <!-- Script Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    let stations = [];
 
     const map = L.map('map').setView([48.857, 2.35], 13);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -53,13 +56,14 @@
     fetch('http://localhost/stops')
       .then(response => response.json())
       .then(data => {
+        stations = data.map(stop => stop.name).filter(Boolean);  // on extrait les noms des arrêts
+
         data.forEach(stop => {
           stopNames.push(stop.name);
           if (stop.lat && stop.lon) {
             L.marker([stop.lat, stop.lon], { icon: metroIcon })
-  .addTo(map)
-  .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`);
-
+              .addTo(map)
+              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`);
           }
         });
       })
@@ -98,6 +102,7 @@
       }
     }
 
+
     departInput.addEventListener("focus", () => {
       currentInput = departInput;
       showSuggestions(departInput);
@@ -123,6 +128,12 @@
         suggestionsBox.innerHTML = "";
       }
     });
+
+    searchBtn.addEventListener("click", () => {
+      localStorage.setItem("depart", departInput.value);
+      localStorage.setItem("arrivee", arriveeInput.value);
+    });
+
 
       fetch("http://localhost/api/lines")
   .then(response => response.json())

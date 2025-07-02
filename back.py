@@ -26,6 +26,10 @@ def home():
 def show_carte():
     return render_template("carte.html")
 
+@app.route("/trajet")
+def show_trajet():
+    return render_template("trajet.html")
+
 @app.route("/stops")
 def get_stops():
     return jsonify([stop.to_dict() for stop in metroGraph.stops.values()])
@@ -191,3 +195,6 @@ def get_line_color(name):
 
 CORS(app)
 app.run(host='0.0.0.0', port=80)
+
+
+
