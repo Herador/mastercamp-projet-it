@@ -50,11 +50,75 @@
   iconAnchor: [16, 16],
   popupAnchor: [0, -16]
 });
+
+    const stopNames = []
+
+    fetch('http://localhost/stops')
+      .then(response => response.json())
+      .then(data => {
+        stations = data.map(stop => stop.name).filter(Boolean);  // on extrait les noms des arrêts
+
+        data.forEach(stop => {
+          stopNames.push(stop.name);
+          if (stop.lat && stop.lon) {
+            L.marker([stop.lat, stop.lon], { icon: metroIcon })
+              .addTo(map)
+              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`);
+          }
+        });
+      })
+      .catch(error => console.error('Erreur de chargement des arrêts:', error));
     const depart = localStorage.getItem("depart") || "Non défini";
     const arrivee = localStorage.getItem("arrivee") || "Non défini";
 
     document.getElementById("depart").textContent = depart;
     document.getElementById("arrivee").textContent = arrivee;
+
+          fetch("http://localhost/api/lines")
+  .then(response => response.json())
+  .then(lines => {
+    lines.forEach(line => {
+      const polyline = L.polyline(line.coordinates, {
+        color: line.color,
+        weight: 5,
+        opacity: 1,
+        lineJoin: 'round',
+      }).addTo(map);
+
+      polyline.bindPopup(line.name);
+    });
+  })
+  .catch(error => console.error("Erreur lors du chargement des lignes :", error));
+fetch(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`)
+  .then(response => response.json())
+  .then(data => {
+    if (data.error) {
+      document.getElementById("trajet-rapide").textContent = "Erreur : " + data.error;
+      return;
+    }
+
+    const container = document.getElementById("trajet-rapide");
+    const totalMin = Math.round(data.total_duration / 60);
+
+    // Extraire les lignes empruntées (en les rendant uniques)
+    const allLines = data.steps.flatMap(step => step.routes);
+    const uniqueLines = [...new Set(allLines)];
+
+    // Créer les icônes de lignes
+    const iconsHtml = uniqueLines.map(line => {
+      const nom = line.toLowerCase(); // ex: "7"
+      return `<img src="../static/${nom}.png" alt="Ligne ${line}" class="metro-icon" />`;
+    }).join(" ");
+
+    container.innerHTML = `<div>Durée : <strong>${totalMin} minutes</strong></div> <div>Métro : ${iconsHtml}</div>`;
+  })
+  .catch(error => {
+    console.error("Erreur lors du calcul du trajet :", error);
+    document.getElementById("trajet-rapide").textContent = "Erreur lors du calcul.";
+  });
+ 
+  
+
   </script>
 </body>
 </html>

@@ -171,3 +171,11 @@ body {
   font-size: 32px;
   margin: 0px;
 }
+
+.metro-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
