@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trajet MED</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="../static/styles.css" />
+</head>
+<body>
+  <div class="container">
+
+    <!-- Bande bleue IDENTIQUE avec même structure -->
+    <div class="bottom-blue small">
+      <h1 class="logo">MED</h1>
+
+      <div class="form-box">
+        <p class="title">Ton trajet</p>
+
+        <div class="info-title">Départ :</div>
+        <div class="info-content" id="depart"></div>
+
+        <div class="info-title">Arrivée :</div>
+        <div class="info-content" id="arrivee"></div>
+
+        <div class="info-title">Le trajet le plus rapide :</div>
+        <div class="info-content" id="trajet-rapide">À calculer…</div>
+
+        <div class="info-title">Le trajet le plus écologique :</div>
+        <div class="info-content" id="trajet-eco">À calculer…</div>
+      </div>
+    </div>
+
+    <!-- Carte ou zone vide à droite -->
+    <div id="map"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const map = L.map('map').setView([48.857, 2.35], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors & CartoDB',
+      maxZoom: 18
+    }).addTo(map);
+
+    const metroIcon = L.icon({
+  iconUrl: '../static/logo_metro.png', 
+  iconSize: [20, 15], 
+  iconAnchor: [16, 16],
+  popupAnchor: [0, -16]
+});
+    const depart = localStorage.getItem("depart") || "Non défini";
+    const arrivee = localStorage.getItem("arrivee") || "Non défini";
+
+    document.getElementById("depart").textContent = depart;
+    document.getElementById("arrivee").textContent = arrivee;
+  </script>
+</body>
+</html>

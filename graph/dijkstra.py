@@ -1,4 +1,11 @@
+import sys
+import os
+
+# Ajoute le dossier parent du dossier 'graph' au sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import math
+import pickle
 
 # Initialiser les distances et prédécesseurs
 def init_plus_court_chemin(s, graphe):
@@ -9,8 +16,8 @@ def init_plus_court_chemin(s, graphe):
 
 # Relaxation avec mise à jour du prédécesseur
 def relaxation(graphe, x, y, d, pred):
-    if d[y] > d[x] + graphe[x][y]:
-        d[y] = d[x] + graphe[x][y]
+    if d[y] > d[x] + graphe[x][y]["duration"]:
+        d[y] = d[x] + graphe[x][y]["duration"]
         pred[y] = x
 
 # Algorithme de Dijkstra
@@ -46,18 +53,30 @@ graphe = {
     's6': {'s1': 2, 's5': 1}
 }
 
-source = 's1'
-distances, pred = dijkstra(graphe, source)
+
+path = os.path.join(os.path.dirname(__file__), "../data/metro_graph.pkl")
+with open(path, "rb") as f:
+    metroGraph = pickle.load(f)
+
+source = metroGraph.get_stop_by_name('Châtelet')
+distances, pred = dijkstra(metroGraph.graph, source)
 
 # Affichage des résultats
+'''
 print(f"Plus courts chemins depuis {source} :")
-for noeud in graphe:
+
+for noeud in metroGraph.graph:
     chemin = reconstruire_chemin(pred, source, noeud)
     if chemin:
-        chemin_str = " → ".join(chemin)
+        chemin_str = " → ".join(str(stop) for stop in chemin)
         print(f"{source} → {noeud} = {distances[noeud]} | Chemin : {chemin_str}")
     else:
         print(f"{source} → {noeud} : pas de chemin")
+'''
+dest = metroGraph.get_stop_by_name('Nation')
 
-#for noeud in metroGraph.graph:
- #   print(f"{source} → {noeud} = {distances[noeud]}")
+chemin = reconstruire_chemin(pred, source, dest)
+if chemin:
+    chemin_str = " → ".join(str(stop) for stop in chemin)
+    print(f"{source} → {dest} = {distances[dest]} | Chemin : {chemin_str}")
+#print(metroGraph.graph)

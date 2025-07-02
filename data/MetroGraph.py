@@ -8,23 +8,40 @@ class MetroGraph:
         for s in stop_dict.values():
             self.stops[s.id] = s
         for row in edges.itertuples(index=False):
-            u, v, w = row.u, row.v, row.duration
+            u, v, w, route= row.u, row.v, row.duration, row.route_short_name
             if pd.notnull(u) and pd.notnull(v):
-                if v not in self.graph[u] or self.graph[u][v] > w:
-                    self.graph[u][v] = w
-                    self.graph[v][u] = w
+                # u->v
+                if v not in self.graph[u] or self.graph[u][v]["duration"] > w:
+                    self.graph[u][v] = {"duration": w, "routes": set([route])}
+                else:
+                    self.graph[u][v]["routes"].add(route)
+
+                # v → u
+                if u not in self.graph[v] or self.graph[v][u]["duration"] > w:
+                    self.graph[v][u] = {"duration": w, "routes": set([route])}
+                else:
+                    self.graph[v][u]["routes"].add(route)
         
 
     def ajouter_stop(self, stop):
         self.stops[stop.id] = stop
 
-    def ajouter_arete(self, stop1, stop2, duration):
+    def ajouter_arete(self, stop1, stop2, duration, route):
         if stop2 not in self.graph[stop1] or self.graph[stop1][stop2] > duration:
-            self.graph[stop1][stop2] = duration
-            self.graph[stop2][stop1] = duration  # graphe non orienté
+            self.graph[stop1][stop2] = {"duration": duration, "routes": set([route])}
+        else:
+            self.graph[stop1][stop2]["routes"].add(route)
+        if stop1 not in self.graph[stop2] or self.graph[stop2][stop1]["duration"] > duration:
+            self.graph[stop2][stop1] = {"duration": duration, "routes": set([route])}
+        else:
+            self.graph[stop2][stop1]["routes"].add(route)
 
-    def get_stops_by_name(self, name):
-        return [s for s in self.stops.values() if s.name == name]
+    
+    def get_stop_by_name(self,name):
+        for stop in self.stops.values():
+            if stop.name.lower() == name.lower():
+                return stop
+        return None
 
     def voisins(self, stop):
         return self.graph.get(stop, {})

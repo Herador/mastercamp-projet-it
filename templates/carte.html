@@ -24,7 +24,9 @@
         <input type="text" id="arrivee" placeholder="Arrivée" autocomplete="off" />
         <div class="suggestions" id="suggestions"></div>
       </div>
-      <button id="search-btn" class="search-button" disabled>Recherche</button>
+      <a href="/trajet" id="search-btn" class="search-button">Recherche</a>
+
+
     </div>
 
     <!-- Carte Leaflet à droite -->
@@ -34,18 +36,12 @@
   <!-- Script Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const stations = [
-      "Château Rouge", "Château D'eau", "Château de Vincennes", "Château-Landon",
-      "Châtelet Les Halles", "Gare de Lyon", "Nation", "Porte de Clignancourt", "Place d'Italie",
-      "Montparnasse-Bienvenue", "Bastille", "Gare du Nord", "République", "Opéra",
-      "La Défense", "Saint-Lazare", "Pyrénées", "Jaurès", "Barbès-Rochechouart", "Odéon"
-    ];
+    let stations = [];
 
     const map = L.map('map').setView([48.857, 2.35], 13);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '',  // On vide l'attribution
-      maxZoom: 18,
-      detectRetina: true
+      attribution: '&copy; OpenStreetMap contributors & CartoDB',
+      maxZoom: 18
     }).addTo(map);
 
     const metroIcon = L.icon({
@@ -55,16 +51,19 @@
   popupAnchor: [0, -16]
 });
 
+    const stopNames = []
 
     fetch('http://localhost/stops')
       .then(response => response.json())
       .then(data => {
+        stations = data.map(stop => stop.name).filter(Boolean);  // on extrait les noms des arrêts
+
         data.forEach(stop => {
+          stopNames.push(stop.name);
           if (stop.lat && stop.lon) {
             L.marker([stop.lat, stop.lon], { icon: metroIcon })
-  .addTo(map)
-  .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`);
-
+              .addTo(map)
+              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`);
           }
         });
       })
@@ -79,7 +78,7 @@
 
     function showSuggestions(input) {
       const query = input.value.toLowerCase();
-      const results = stations.filter(station => station.toLowerCase().includes(query));
+      const results = stopNames.filter(station => station.toLowerCase().includes(query));
       suggestionsBox.innerHTML = "";
 
       results.forEach(station => {
@@ -102,6 +101,7 @@
         searchBtn.style.display = "none";
       }
     }
+
 
     departInput.addEventListener("focus", () => {
       currentInput = departInput;
@@ -128,6 +128,12 @@
         suggestionsBox.innerHTML = "";
       }
     });
+
+    searchBtn.addEventListener("click", () => {
+      localStorage.setItem("depart", departInput.value);
+      localStorage.setItem("arrivee", arriveeInput.value);
+    });
+
   </script>
 </body>
 </html>
