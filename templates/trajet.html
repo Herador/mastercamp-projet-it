@@ -2,208 +2,293 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
+  <!-- Définit le jeu de caractères utilisé pour que les accents et caractères spéciaux s'affichent correctement -->
+
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Permet à la page de s’adapter à la taille de l’écran (ordinateur, tablette, téléphone) -->
+
   <title>Trajet MED</title>
+  <!-- Titre de la page qui apparaît dans l’onglet du navigateur -->
+
+  <!-- Importation du style CSS de la bibliothèque Leaflet pour la carte -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Importation de ta feuille de style personnelle pour le design -->
   <link rel="stylesheet" href="../static/styles.css" />
 </head>
 <body>
+
+  <!-- Conteneur principal qui organise la page en deux parties (carte + panneau d’information) -->
   <div class="container">
 
-    <!-- Bande bleue -->
+    <!-- Bande latérale bleue, affichant les informations du trajet -->
     <div class="bottom-blue small">
-      <h1 class="logo">MED</h1>
+      <h1 class="logo">MED</h1> <!-- Logo ou titre principal -->
 
       <div class="form-box">
-        <p class="title">Ton trajet</p>
+        <p class="title">Ton trajet</p> <!-- Titre de la section -->
 
+        <!-- Affiche la station de départ récupérée en mémoire -->
         <div class="info-title">Départ :</div>
         <div class="info-content" id="depart"></div>
 
+        <!-- Affiche la station d’arrivée récupérée en mémoire -->
         <div class="info-title">Arrivée :</div>
         <div class="info-content" id="arrivee"></div>
 
+        <!-- Affiche le trajet le plus rapide calculé -->
         <div class="info-title">Le trajet le plus rapide :</div>
         <div class="info-content" id="trajet-rapide">À calculer…</div>
+
+        <!-- Bouton pour afficher plus de détails sur le trajet -->
         <button id="btn-details" class="detail-button">Afficher les détails du trajet</button>
+
+        <!-- Conteneur pour afficher ces détails, caché par défaut -->
         <div id="details-trajet" class="trajet-detail"></div>
 
+        <!-- Affiche le trajet le plus écologique calculé -->
         <div class="info-title">Le trajet le plus écologique :</div>
         <div class="info-content" id="trajet-eco">À calculer…</div>
-
-        
       </div>
     </div>
 
-    <!-- Carte -->
+    <!-- Partie où la carte interactive Leaflet sera affichée -->
     <div id="map"></div>
   </div>
 
+  <!-- Import de la bibliothèque JavaScript Leaflet qui gère la carte -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
+    // Création de la carte centrée sur Paris (latitude 48.857, longitude 2.35) avec zoom initial 13
     const map = L.map('map').setView([48.857, 2.35], 13);
+
+    // Ajout des tuiles (images) de la carte depuis un fournisseur libre
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors & CartoDB',
+      attribution: '&copy; OpenStreetMap contributors & CartoDB', // Crédits à OpenStreetMap
       maxZoom: 18
     }).addTo(map);
 
+    // Définition de l'icône personnalisée utilisée pour marquer les stations de métro
     const metroIcon = L.icon({
-      iconUrl: '../static/logo_metro.png',
-      iconSize: [20, 15],
-      iconAnchor: [16, 16],
-      popupAnchor: [0, -16]
+      iconUrl: '../static/logo_metro.png', // Image de l'icône
+      iconSize: [20, 15],  // Taille de l'icône
+      iconAnchor: [16, 16], // Point d’ancrage de l'icône (pour l’aligner correctement)
+      popupAnchor: [0, -16] // Position du popup par rapport à l’icône
     });
 
-    const stopNames = []
+    // Tableau pour stocker les noms des stations récupérées
+    const stopNames = [];
 
+    // Récupération des arrêts depuis un serveur local (API)
     fetch('http://localhost/stops')
-      .then(response => response.json())
+      .then(response => response.json())  // Conversion de la réponse en données utilisables
       .then(data => {
-        stations = data.map(stop => stop.name).filter(Boolean);
-
         data.forEach(stop => {
-          stopNames.push(stop.name);
+          stopNames.push(stop.name); // On ajoute le nom de chaque arrêt dans la liste
+
+          // Si la station a des coordonnées géographiques, on place un marqueur sur la carte
           if (stop.lat && stop.lon) {
             L.marker([stop.lat, stop.lon], { icon: metroIcon })
-              .addTo(map)
-              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`);
+              .addTo(map)  // Ajout du marqueur sur la carte
+              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`); // Popup qui s’affiche au clic
           }
         });
       })
       .catch(error => console.error('Erreur de chargement des arrêts:', error));
+      // En cas de problème pour récupérer les données, on affiche un message d’erreur dans la console
 
+    // Récupération des stations de départ et d’arrivée sauvegardées dans le navigateur
     const depart = localStorage.getItem("depart") || "Non défini";
     const arrivee = localStorage.getItem("arrivee") || "Non défini";
 
+    // Affichage des noms des stations dans la bande bleue à gauche
     document.getElementById("depart").textContent = depart;
     document.getElementById("arrivee").textContent = arrivee;
 
-    // Lignes
-    fetch("http://localhost/api/lines")
-      .then(response => response.json())
-      .then(lines => {
-        lines.forEach(line => {
-          const polyline = L.polyline(line.coordinates, {
-            color: line.color,
-            weight: 5,
-            opacity: 1,
-            lineJoin: 'round',
-          }).addTo(map);
+    // Objet pour associer les couleurs à chaque ligne de métro (sera rempli plus tard)
+    let colorMap = {};
 
-          polyline.bindPopup(line.name);
+    // Récupération des données des lignes de métro (nom + couleur)
+    fetch("http://localhost/api/lines")
+      .then(resp => resp.json())
+      .then(linesData => {
+        linesData.forEach(line => {
+          // Extrait le numéro de ligne et associe la couleur correspondante
+          const name = line.name.replace("Ligne ", "");
+          colorMap[name] = line.color;
         });
       })
-      .catch(error => console.error("Erreur lors du chargement des lignes :", error));
+      .catch(error => {
+        console.error("Erreur chargement des couleurs lignes :", error);
+      });
 
-    // Trajet rapide
+    // Calcul et affichage du trajet le plus rapide entre départ et arrivée
     fetch(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`)
       .then(response => response.json())
       .then(data => {
         if (data.error) {
+          // Affiche une erreur si le calcul échoue
           document.getElementById("trajet-rapide").textContent = "Erreur : " + data.error;
           return;
         }
 
+        // Conteneur pour afficher les infos du trajet rapide
         const container = document.getElementById("trajet-rapide");
+
+        // Durée totale en minutes arrondie
         const totalMin = Math.round(data.total_duration / 60);
-        const allLines = data.steps.flatMap(step => step.routes);
-        const uniqueLines = [...new Set(allLines)];
 
+        // Liste des lignes de métro utilisées (sans doublons)
+        const uniqueLines = [...new Set(data.steps.map(step => step.routes[0]))];
+
+        // Création des icônes des lignes utilisées (images)
         const iconsHtml = uniqueLines.map(line => {
-        const imageName = line.toLowerCase().replace("b", "bis"); // gestion des lignes 3bis et 7bis
-        return `<img src="../static/${imageName}.png" alt="Ligne ${line}" class="metro-icon" style="height:30px;margin-right:5px;" />`;
-      }).join(" ");
+          const imageName = line.toLowerCase().replace("b", "bis");
+          return `<img src="../static/${imageName}.png" alt="Ligne ${line}" class="metro-icon" style="height:30px;margin-right:5px;" />`;
+        }).join(" ");
 
-
+        // Affiche la durée et les icônes des lignes utilisées
         container.innerHTML = `
-  <div>Durée : <strong>${totalMin} minutes</strong></div>
-  <div>Métro : ${iconsHtml}</div>
-`;
+          <div>Durée : <strong>${totalMin} minutes</strong></div>
+          <div>Métro : ${iconsHtml}</div>
+        `;
 
-document.getElementById("btn-details").addEventListener("click", () => {
-  const container = document.getElementById("details-trajet");
-  container.innerHTML = "";
+        // Suppression des anciens tracés du trajet sur la carte (pour éviter les doublons)
+        if (window.trajetLayers) {
+          window.trajetLayers.forEach(layer => map.removeLayer(layer));
+        }
+        window.trajetLayers = [];
 
-  fetch(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`)
-    .then(response => response.json())
-    .then(data => {
-      if (data.error) {
-        container.innerHTML = `<p style="color:red;">Erreur : ${data.error}</p>`;
-        return;
-      }
+        // Pour chaque segment du trajet, on dessine une ligne colorée correspondant à la ligne de métro
+        data.steps.forEach(step => {
+          const lineUsed = step.routes[0] || "X"; // Nom de la ligne utilisée
+          const color = colorMap[lineUsed] || "blue"; // Couleur associée
 
-      const chemin = data.steps;
-      if (chemin.length === 0) {
-        container.innerHTML = `<p>Pas de chemin trouvé.</p>`;
-        return;
-      }
+          // Coordonnées du segment (départ et arrivée)
+          const latlngs = [
+            [step.from.lat, step.from.lon],
+            [step.to.lat, step.to.lon]
+          ];
 
-      const colorMap = {};
-      fetch("http://localhost/api/lines")
-        .then(resp => resp.json())
-        .then(linesData => {
-          linesData.forEach(line => {
-            const name = line.name.replace("Ligne ", "");
-            colorMap[name] = line.color;
-          });
+          // Création et ajout de la ligne colorée sur la carte
+          const segment = L.polyline(latlngs, {
+            color: color,
+            weight: 6,
+            opacity: 0.9,
+            lineJoin: 'round'
+          }).addTo(map);
 
-          let currentLine = null;
-          let currentStart = null;
-          let stationCount = 0;
-
-          chemin.forEach((step, index) => {
-            const lineUsed = step.routes[0] || "X";
-
-            if (lineUsed !== currentLine) {
-              if (currentLine && currentStart) {
-                const imageName = currentLine.toLowerCase().replace("b", "bis");
-                const color = colorMap[currentLine] || "#999";
-
-                const div = document.createElement("div");
-                div.className = "station-item";
-                div.innerHTML = `
-                  <img src="../static/${imageName}.png" alt="Ligne ${currentLine}" style="height:25px;margin-right:10px;">
-                  <strong>${currentStart}</strong> ➔ <strong>${step.from.name}</strong>
-                  <span style="color:${color}; margin-left:10px;">(${stationCount} stations)</span>
-                `;
-                container.appendChild(div);
-              }
-              currentLine = lineUsed;
-              currentStart = step.from.name;
-              stationCount = 1;
-            } else {
-              stationCount++;
-            }
-
-            // Dernière étape : afficher l'arrivée finale
-            if (index === chemin.length - 1) {
-              const imageName = currentLine.toLowerCase().replace("b", "bis");
-              const color = colorMap[currentLine] || "#999";
-
-              const div = document.createElement("div");
-              div.className = "station-item";
-              div.innerHTML = `
-                <img src="../static/${imageName}.png" alt="Ligne ${currentLine}" style="height:25px;margin-right:10px;">
-                <strong>${currentStart}</strong> ➔ <strong>${step.to.name}</strong>
-                <span style="color:${color}; margin-left:10px;">(${stationCount} stations)</span>
-              `;
-              container.appendChild(div);
-            }
-          });
+          // Stocke cette ligne pour pouvoir la supprimer plus tard si besoin
+          window.trajetLayers.push(segment);
         });
-    });
-});
 
-      
+        // Ajuste la carte pour afficher tout le trajet dans la fenêtre visible
+        const allLatLngs = [];
+        data.steps.forEach(step => {
+          allLatLngs.push([step.from.lat, step.from.lon]);
+          allLatLngs.push([step.to.lat, step.to.lon]);
+        });
+        map.fitBounds(L.latLngBounds(allLatLngs));
+
+        // Gestion du bouton "Afficher les détails du trajet"
+        document.getElementById("btn-details").addEventListener("click", () => {
+          const container = document.getElementById("details-trajet");
+
+          // Toggle (afficher / cacher) les détails du trajet
+          const isVisible = container.style.display === "block";
+          if (isVisible) {
+            container.style.display = "none";
+            document.getElementById("btn-details").textContent = "Afficher les détails du trajet";
+            return;
+          } else {
+            container.style.display = "block";
+            document.getElementById("btn-details").textContent = "Masquer les détails du trajet";
+          }
+
+          container.innerHTML = ""; // Vide le contenu avant de le remplir
+
+          // Requête pour récupérer les détails du trajet
+          fetch(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.error) {
+                container.innerHTML = `<p style="color:red;">Erreur : ${data.error}</p>`;
+                return;
+              }
+
+              const chemin = data.steps;
+              if (chemin.length === 0) {
+                container.innerHTML = `<p>Pas de chemin trouvé.</p>`;
+                return;
+              }
+
+              // Récupération des couleurs des lignes pour les détails
+              fetch("http://localhost/api/lines")
+                .then(resp => resp.json())
+                .then(linesData => {
+                  const colorMapDetails = {};
+                  linesData.forEach(line => {
+                    const name = line.name.replace("Ligne ", "");
+                    colorMapDetails[name] = line.color;
+                  });
+
+                  let currentLine = null;
+                  let currentStart = null;
+                  let stationCount = 0;
+
+                  // Parcours du trajet pour créer des sections regroupées par ligne
+                  chemin.forEach((step, index) => {
+                    const lineUsed = step.routes[0] || "X";
+
+                    if (lineUsed !== currentLine) {
+                      // Si on change de ligne, on affiche le segment précédent
+                      if (currentLine && currentStart) {
+                        const imageName = currentLine.toLowerCase().replace("b", "bis");
+                        const color = colorMapDetails[currentLine] || "#999";
+
+                        const div = document.createElement("div");
+                        div.className = "station-item";
+                        div.innerHTML = `
+                          <img src="../static/${imageName}.png" alt="Ligne ${currentLine}" style="height:25px;margin-right:10px;">
+                          <strong>${currentStart}</strong> ➔ <strong>${step.from.name}</strong>
+                          <span style="color:${color}; margin-left:10px;">(${stationCount} stations)</span>
+                        `;
+                        container.appendChild(div);
+                      }
+                      // Mise à jour pour le nouveau segment
+                      currentLine = lineUsed;
+                      currentStart = step.from.name;
+                      stationCount = 1;
+                    } else {
+                      stationCount++; // Compte stations dans la même ligne
+                    }
+
+                    // Dernier segment à afficher
+                    if (index === chemin.length - 1) {
+                      const imageName = currentLine.toLowerCase().replace("b", "bis");
+                      const color = colorMapDetails[currentLine] || "#999";
+
+                      const div = document.createElement("div");
+                      div.className = "station-item";
+                      div.innerHTML = `
+                        <img src="../static/${imageName}.png" alt="Ligne ${currentLine}" style="height:25px;margin-right:10px;">
+                        <strong>${currentStart}</strong> ➔ <strong>${step.to.name}</strong>
+                        <span style="color:${color}; margin-left:10px;">(${stationCount} stations)</span>
+                      `;
+                      container.appendChild(div);
+                    }
+                  });
+                });
+            });
+        });
+
       })
       .catch(error => {
+        // Affiche un message si le calcul du trajet échoue
         console.error("Erreur lors du calcul du trajet :", error);
         document.getElementById("trajet-rapide").textContent = "Erreur lors du calcul.";
       });
-
-
-  
   </script>
 </body>
-</html>  
+</html>

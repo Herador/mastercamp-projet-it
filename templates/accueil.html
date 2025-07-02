@@ -2,25 +2,37 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
+  <!-- Définit l'encodage des caractères pour que le texte s'affiche correctement -->
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Permet d'adapter l'affichage à la taille de l'écran (ordinateur, téléphone, tablette) -->
+  
   <title>MED Métro EFREI Dodo</title>
-  <!-- Feuille de style -->
+  <!-- Titre qui s'affiche dans l'onglet du navigateur -->
+
+  <!-- Lien vers la feuille de style CSS pour mettre en forme la page -->
   <link rel="stylesheet" href="../static/styles.css" />
 </head>
+
 <body>
+  <!-- Conteneur principal de la page d'accueil, centré à l'écran -->
   <div class="container_accueil">
-    <!-- Image du train -->
+
+    <!-- Section contenant l'image du train -->
     <div class="train-img">
+      <!-- Image animée représentant un train, avec un texte alternatif pour l'accessibilité -->
       <img src="../static/train-idfm.gif" alt="Train Île-de-France Mobilités" />
     </div>
 
-    <!-- Message de bienvenue -->
+    <!-- Section affichant le message de bienvenue à l'utilisateur -->
     <div class="welcome">
       <p>
         Bienvenue sur <strong>MED</strong> Métro EFREI Dodo,<br>
         l'application qui vous aide à organiser vos trajets !
       </p>
-      <!-- Bouton vers la carte -->
+      
+      <!-- Bouton cliquable pour démarrer, qui redirige vers la page de la carte -->
+      <!-- La partie "{{ url_for('show_carte') }}" est un lien généré par un langage serveur (Flask en Python) -->
       <a href="{{ url_for('show_carte') }}" class="start-button">C’est parti</a>
     </div>
   </div>

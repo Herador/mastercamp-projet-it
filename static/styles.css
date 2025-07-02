@@ -1,33 +1,45 @@
+/* ============================================
+   IMPORT DE LA POLICE GOOGLE FONTS
+   ============================================ */
 @import url('https://fonts.googleapis.com/css2?family=Klee+One&display=swap');
 
+/* ============================================
+   STYLES GÉNÉRAUX DU BODY
+   ============================================ */
 body {
   margin: 0;
   padding: 0;
   font-family: 'Klee One', cursive;
-  background-color: #0078c8;
+  background-color: #0078c8; /* Bleu principal de fond */
 }
 
+/* ============================================
+   PAGE D'ACCUEIL - CONTENEUR PRINCIPAL
+   ============================================ */
 .container_accueil {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
+  align-items: center;       /* Centrer horizontalement */
+  justify-content: center;   /* Centrer verticalement */
+  height: 100vh;             /* Hauteur pleine page */
   text-align: center;
-  color: white;
+  color: white;              /* Texte blanc */
 }
 
+/* Image du train sur la page d'accueil */
 .train-image {
   max-width: 200px;
   margin-bottom: 15px;
 }
 
+/* Texte de bienvenue */
 .welcome {
   font-size: 24px;
   margin-bottom: 50px;
   line-height: 1.5;
 }
 
+/* Bouton "Démarrer" sur la page d'accueil */
 .start-button {
   background-color: white;
   color: #0078c8;
@@ -43,56 +55,67 @@ body {
   background-color: #e0e0e0;
 }
 
-/* Pour la carte en plein écran avec panneau latéral */
+/* ============================================
+   CONTENEUR PRINCIPAL AVEC CARTE ET PANNEAU LATÉRAL
+   ============================================ */
 .container {
   display: flex;
-  flex-direction: row; /* Important */
-  height: 100vh;
+  flex-direction: row; /* Organisation en ligne : carte + panneau */
+  height: 100vh;       /* Hauteur pleine page */
 }
 
-/* Carte Leaflet */
+/* ============================================
+   CARTE LEAFLET
+   ============================================ */
 #map {
-  flex: 1;
-  height: 100%;
+  flex: 1;       /* Prend tout l'espace restant */
+  height: 100%;  /* Hauteur pleine */
 }
 
-/* Colonne bleue */
+/* ============================================
+   PANNEAU LATÉRAL BLEU (SECTION DROITE)
+   ============================================ */
 .bottom-blue {
   width: 300px;
   background-color: #0078c8;
-  padding: 40px 20px;
+  padding: 40px 30px;
   flex-direction: column;
   align-items: center;
   color: white;
   font-family: 'Klee One', cursive;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); /* Ombre portée à gauche */
 }
 
+/* Modificateurs pour le panneau */
 .bottom-blue.small {
-  justify-content: center;
+  justify-content: center;  /* Centrer verticalement */
 }
 
 .bottom-blue.large {
-  justify-content: flex-start;
+  justify-content: flex-start; /* Aligner en haut */
 }
 
-/* Titre du formulaire */
+/* ============================================
+   FORMULAIRE - TITRE
+   ============================================ */
 .form-title {
   font-size: 20px;
   margin-bottom: 20px;
 }
 
-/* Boîte du formulaire */
+/* ============================================
+   FORMULAIRE - CONTENEUR INPUTS
+   ============================================ */
 .form-box {
   background-color: white;
   border-radius: 12px;
-  padding: 20px;
+  padding: 10px;
   width: 100%;
   box-sizing: border-box;
   color: black;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 15px; /* Espacement vertical entre inputs */
 }
 
 .form-box input {
@@ -102,13 +125,15 @@ body {
   font-family: 'Klee One', cursive;
 }
 
-/* Suggestions */
+/* ============================================
+   SUGGESTIONS DE RECHERCHE
+   ============================================ */
 .suggestions {
   display: flex;
   flex-direction: column;
   gap: 8px;
   max-height: 150px;
-  overflow-y: auto;
+  overflow-y: auto; /* Scroll si trop de suggestions */
 }
 
 .suggestion-item {
@@ -123,7 +148,9 @@ body {
   background-color: #ddd;
 }
 
-/* Bouton recherche */
+/* ============================================
+   BOUTON RECHERCHE
+   ============================================ */
 .search-button {
   margin-top: 20px;
   background-color: #085A8C;
@@ -135,17 +162,16 @@ body {
   cursor: pointer;
   transition: background-color 0.3s;
   text-decoration: none;
+  display: none; /* Caché par défaut */
 }
 
 .search-button:hover {
   background-color: #0b4264;
 }
 
-.search-button {
-  display: none; /* Caché au chargement */
-}
-
-
+/* ============================================
+   LOGO PRINCIPAL
+   ============================================ */
 .logo {
   color: white;
   font-size: 72px;
@@ -153,7 +179,9 @@ body {
   text-align: center;
 }
 
-
+/* ============================================
+   TITRES ET CONTENUS D'INFORMATIONS
+   ============================================ */
 .info-title {
   font-weight: bold;
   font-size: 18px;
@@ -172,6 +200,9 @@ body {
   margin: 0px;
 }
 
+/* ============================================
+   ICÔNE MÉTRO
+   ============================================ */
 .metro-icon {
   width: 24px;
   height: 24px;
@@ -179,6 +210,9 @@ body {
   vertical-align: middle;
 }
 
+/* ============================================
+   BOUTON DÉTAILS
+   ============================================ */
 .detail-button {
   margin-top: 10px;
   padding: 8px 14px;
@@ -191,7 +225,10 @@ body {
   float: right;
   font-size: 14px;
 }
-/* Conteneur général */
+
+/* ============================================
+   DÉTAILS DU TRAJET
+   ============================================ */
 .trajet-detail {
   display: flex;
   flex-direction: column;
@@ -199,14 +236,16 @@ body {
   margin-top: 25px;
 }
 
-/* Segment d'une ligne */
+/* ============================================
+   SEGMENT D'UNE LIGNE DE TRANSPORT
+   ============================================ */
 .line-segment {
   display: flex;
   align-items: flex-start;
   gap: 10px;
 }
 
-/* Badge rond avec le numéro de la ligne */
+/* Badge rond avec numéro de ligne */
 .line-number {
   flex-shrink: 0;
   width: 24px;
@@ -222,7 +261,7 @@ body {
   margin-top: 4px;
 }
 
-/* Ligne verticale */
+/* Barre verticale représentant la ligne */
 .line-bar {
   width: 4px;
   background-color: var(--line-color, #999);
@@ -231,21 +270,22 @@ body {
   margin-top: 4px;
 }
 
-/* Liste des stations */
+/* Liste des stations sur la ligne */
 .stations-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* Nom de station */
+/* Nom de chaque station */
 .station {
   font-size: 16px;
   position: relative;
   padding-left: 12px;
+  margin-bottom: 10px; /* espace entre stations */
 }
 
-/* Pastille circulaire pour chaque station */
+/* Pastille circulaire devant chaque station */
 .station::before {
   content: "";
   position: absolute;
@@ -257,35 +297,43 @@ body {
   border-radius: 50%;
 }
 
+/* Station mise en valeur (en gras) */
 .station.bold {
   font-weight: bold;
 }
 
-/* Ajoute cette règle pour gérer l'espacement réduit entre stations collées */
+/* Gestion de l'espacement réduit entre stations collées */
 .station.coller {
-  margin-bottom: 0;  /* pas d'espace entre stations collées */
-  padding-bottom: 2px; /* un peu de padding pour visibilité */
+  margin-bottom: 0;    /* Pas d'espace entre stations collées */
+  padding-bottom: 2px; /* Petit padding pour visibilité */
 }
 
-.station {
-  margin-bottom: 10px; /* espace normal entre stations */
-}
-
-
+/* ============================================
+   ICÔNE MÉTRO (version petite)
+   ============================================ */
 .metro-icon {
   height: 25px;
   margin-right: 5px;
   vertical-align: middle;
 }
 
+/* ============================================
+   ÉLÉMENT DE LISTE DE STATIONS (style conteneur)
+   ============================================ */
 .station-item {
   display: flex;
   align-items: center;
   background: #f0f0f0;
-  margin: 5px 0;
+  margin: 20px 0;
   padding: 8px 12px;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  font-size: 12px;
+  font-size: 16px;
 }
 
+/* ============================================
+   DÉTAILS DU TRAJET (INITIALISÉ EN MASQUÉ)
+   ============================================ */
+#details-trajet {
+  display: none;
+}

@@ -4,153 +4,184 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Carte EFREI Dodo</title>
-  <!-- Style Leaflet -->
+
+  <!-- On importe le style de la carte Leaflet pour l'affichage -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Ta police sympa -->
+
+  <!-- On importe une jolie police d'écriture -->
   <link href="https://fonts.googleapis.com/css2?family=Klee+One&display=swap" rel="stylesheet" />
-  <!-- Feuille de style -->
+
+  <!-- On ajoute notre propre style pour personnaliser l'apparence -->
   <link rel="stylesheet" href="../static/styles.css" />
 </head>
 <body>
   <div class="container">
     
-    <!-- Bande bleue avec le formulaire (placée AVANT) -->
+    <!-- Bande bleue en haut avec le formulaire où on écrit le départ et l'arrivée -->
     <div class="bottom-blue small" id="blue-box">
       <h1 class="logo">MED</h1>
       <div class="form-box" id="form-box">
         
+        <!-- Titre du formulaire -->
         <p class="form-title">On va où ?</p>
+
+        <!-- Champs où l'utilisateur écrit la station de départ -->
         <input type="text" id="depart" placeholder="Départ" autocomplete="off" />
+
+        <!-- Champs où l'utilisateur écrit la station d'arrivée -->
         <input type="text" id="arrivee" placeholder="Arrivée" autocomplete="off" />
+
+        <!-- Ici apparaîtront les propositions automatiques pour aider à remplir les champs -->
         <div class="suggestions" id="suggestions"></div>
       </div>
+
+      <!-- Bouton pour lancer la recherche du trajet -->
       <a href="/trajet" id="search-btn" class="search-button">Recherche</a>
-
-
     </div>
 
-    <!-- Carte Leaflet à droite -->
+    <!-- Ici on place la carte qui va afficher le plan du métro -->
     <div id="map"></div>
   </div>
 
-  <!-- Script Leaflet -->
+  <!-- On importe le script Leaflet, la bibliothèque qui permet d’afficher la carte -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script>
-    let stations = [];
 
+  <script>
+    let stations = []; // Liste vide où on va stocker les noms des stations
+
+    // On crée la carte centrée sur Paris (latitude 48.857, longitude 2.35) avec un zoom de 13
     const map = L.map('map').setView([48.857, 2.35], 13);
+
+    // On ajoute la couche de fond de carte avec les tuiles CartoDB
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap contributors & CartoDB',
       maxZoom: 18
     }).addTo(map);
 
+    // On crée une petite icône personnalisée pour les stations de métro
     const metroIcon = L.icon({
-  iconUrl: '../static/logo_metro.png', 
-  iconSize: [20, 15], 
-  iconAnchor: [16, 16],
-  popupAnchor: [0, -16]
-});
+      iconUrl: '../static/logo_metro.png', // chemin vers l’image de l’icône
+      iconSize: [20, 15], // taille de l’icône
+      iconAnchor: [16, 16], // point d’ancrage de l’icône
+      popupAnchor: [0, -16] // position du popup par rapport à l’icône
+    });
 
-    const stopNames = []
+    const stopNames = []; // Liste des noms de toutes les stations
 
+    // On va chercher la liste des stations disponibles via une requête au serveur local
     fetch('http://localhost/stops')
-      .then(response => response.json())
+      .then(response => response.json()) // On récupère la réponse au format JSON
       .then(data => {
-        stations = data.map(stop => stop.name).filter(Boolean);  // on extrait les noms des arrêts
+        // On récupère uniquement les noms des stations pour les suggestions
+        stations = data.map(stop => stop.name).filter(Boolean);
 
+        // Pour chaque station, on ajoute une icône sur la carte
         data.forEach(stop => {
           stopNames.push(stop.name);
-          if (stop.lat && stop.lon) {
-            L.marker([stop.lat, stop.lon], { icon: metroIcon })
-              .addTo(map)
-              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`);
+          if (stop.lat && stop.lon) { // si la station a des coordonnées GPS
+            L.marker([stop.lat, stop.lon], { icon: metroIcon }) // on crée un marqueur
+              .addTo(map) // on l’ajoute à la carte
+              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`); // popup affiché au clic sur la station
           }
         });
       })
-      .catch(error => console.error('Erreur de chargement des arrêts:', error));
+      .catch(error => console.error('Erreur de chargement des arrêts:', error)); // message si ça plante
 
+    // On récupère les éléments du formulaire dans des variables pour les manipuler plus facilement
     const departInput = document.getElementById("depart");
     const arriveeInput = document.getElementById("arrivee");
     const suggestionsBox = document.getElementById("suggestions");
     const searchBtn = document.getElementById("search-btn");
 
-    let currentInput = null;
+    let currentInput = null; // Pour savoir dans quel champ on est en train d’écrire
 
+    // Fonction qui affiche des propositions en dessous du champ quand on écrit
     function showSuggestions(input) {
-      const query = input.value.toLowerCase();
+      const query = input.value.toLowerCase(); // On met la recherche en minuscules
+      // On filtre les stations qui commencent par ce qu’on tape
       const results = stopNames.filter(station => station.toLowerCase().startsWith(query));
-      suggestionsBox.innerHTML = "";
+      suggestionsBox.innerHTML = ""; // On vide les anciennes suggestions
 
+      // Pour chaque résultat, on crée un petit bouton cliquable dans la liste
       results.forEach(station => {
         const div = document.createElement("div");
         div.className = "suggestion-item";
         div.textContent = station;
+        // Si on clique sur une suggestion, ça remplit le champ automatiquement
         div.onclick = () => {
           input.value = station;
-          suggestionsBox.innerHTML = "";
-          checkInputs();
+          suggestionsBox.innerHTML = ""; // On cache les suggestions
+          checkInputs(); // On vérifie si on peut activer le bouton recherche
         };
-        suggestionsBox.appendChild(div);
+        suggestionsBox.appendChild(div); // On ajoute la suggestion à la liste visible
       });
     }
 
+    // Fonction qui vérifie si les deux champs sont remplis, pour afficher ou cacher le bouton "Recherche"
     function checkInputs() {
       if (departInput.value.trim() && arriveeInput.value.trim()) {
-        searchBtn.style.display = "block";
+        searchBtn.style.display = "block"; // Affiche le bouton si départ et arrivée sont remplis
       } else {
-        searchBtn.style.display = "none";
+        searchBtn.style.display = "none"; // Sinon, on cache le bouton
       }
     }
 
-
+    // Quand on clique dans le champ départ, on prépare les suggestions pour ce champ
     departInput.addEventListener("focus", () => {
       currentInput = departInput;
       showSuggestions(departInput);
     });
 
+    // Quand on clique dans le champ arrivée, on prépare les suggestions pour ce champ
     arriveeInput.addEventListener("focus", () => {
       currentInput = arriveeInput;
       showSuggestions(arriveeInput);
     });
 
+    // Quand on tape quelque chose dans départ, on affiche les suggestions correspondantes
     departInput.addEventListener("input", () => {
       if (currentInput === departInput) showSuggestions(departInput);
       checkInputs();
     });
 
+    // Quand on tape quelque chose dans arrivée, on affiche les suggestions correspondantes
     arriveeInput.addEventListener("input", () => {
       if (currentInput === arriveeInput) showSuggestions(arriveeInput);
       checkInputs();
     });
 
+    // Si on clique en dehors du formulaire, on cache la liste des suggestions
     document.addEventListener("click", (e) => {
       if (!e.target.closest("#form-box")) {
         suggestionsBox.innerHTML = "";
       }
     });
 
+    // Quand on clique sur le bouton "Recherche"
     searchBtn.addEventListener("click", () => {
+      // On sauvegarde les valeurs des champs dans le stockage local du navigateur
       localStorage.setItem("depart", departInput.value);
       localStorage.setItem("arrivee", arriveeInput.value);
     });
 
+    // On récupère aussi les lignes de métro depuis le serveur, pour les afficher en couleur sur la carte
+    fetch("http://localhost/api/lines")
+      .then(response => response.json())
+      .then(lines => {
+        // Pour chaque ligne reçue, on trace une ligne colorée sur la carte
+        lines.forEach(line => {
+          const polyline = L.polyline(line.coordinates, {
+            color: line.color,
+            weight: 5,
+            opacity: 1,
+            lineJoin: 'round',
+          }).addTo(map);
 
-      fetch("http://localhost/api/lines")
-  .then(response => response.json())
-  .then(lines => {
-    lines.forEach(line => {
-      const polyline = L.polyline(line.coordinates, {
-        color: line.color,
-        weight: 5,
-        opacity: 1,
-        lineJoin: 'round',
-      }).addTo(map);
-
-      polyline.bindPopup(line.name);
-    });
-  })
-  .catch(error => console.error("Erreur lors du chargement des lignes :", error));
-
+          // On ajoute un popup qui affiche le nom de la ligne quand on clique dessus
+          polyline.bindPopup(line.name);
+        });
+      })
+      .catch(error => console.error("Erreur lors du chargement des lignes :", error));
   </script>
 </body>
 </html>
