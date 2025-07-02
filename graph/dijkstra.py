@@ -16,8 +16,8 @@ def init_plus_court_chemin(s, graphe):
 
 # Relaxation avec mise à jour du prédécesseur
 def relaxation(graphe, x, y, d, pred):
-    if d[y] > d[x] + graphe[x][y]:
-        d[y] = d[x] + graphe[x][y]
+    if d[y] > d[x] + graphe[x][y]["duration"]:
+        d[y] = d[x] + graphe[x][y]["duration"]
         pred[y] = x
 
 # Algorithme de Dijkstra
@@ -79,3 +79,4 @@ chemin = reconstruire_chemin(pred, source, dest)
 if chemin:
     chemin_str = " → ".join(str(stop) for stop in chemin)
     print(f"{source} → {dest} = {distances[dest]} | Chemin : {chemin_str}")
+#print(metroGraph.graph)

@@ -52,6 +52,27 @@ def get_stop_by_name():
     
     return jsonify(results)
 
+@app.route("/edges")
+def get_edges():
+    results = []
+    seen = set()  
+
+    for stop1, voisins in metroGraph.graph.items():
+        for stop2, info in voisins.items():
+            key = tuple(sorted([stop1.id, stop2.id]))
+            if key in seen:
+                continue
+            seen.add(key)
+
+            results.append({
+                "from": stop1.to_dict(),
+                "to": stop2.to_dict(),
+                "routes": sorted(info["routes"]),
+                "duration": info["duration"]
+            })
+
+    return jsonify(results)
+
 
 @app.route("/neighbors/<stop_id>")
 def get_neighbors(stop_id):
@@ -62,11 +83,12 @@ def get_neighbors(stop_id):
     voisins = metroGraph.voisins(stop)  # dict {Stop: durée}
     results = []
 
-    for voisin_obj, duration in voisins.items():
+    for voisin_obj, info in voisins.items():
         results.append({
             "id": voisin_obj.id,
             "name": voisin_obj.name,
-            "duration": duration
+            "duration": info["duration"],
+            "routes": sorted(info["routes"])
         })
 
     return jsonify(results)
@@ -79,7 +101,6 @@ def get_shortest_path():
 
     start_stop = metroGraph.get_stop_by_name(start_name)
     end_stop = metroGraph.get_stop_by_name(end_name)
-    print(start_stop)
 
     if not start_stop or not end_stop:
         return jsonify({"error": "Arrêts invalides."}), 400
@@ -90,8 +111,28 @@ def get_shortest_path():
     if not chemin:
         return jsonify({"error": "Aucun chemin trouvé"}), 404
 
-    chemin_json = [s.to_dict() for s in chemin]
-    return jsonify(chemin_json)
+    # Durée totale
+    total_duration = sum(
+        metroGraph.graph[chemin[i]][chemin[i+1]]["duration"]
+        for i in range(len(chemin) - 1)
+    )
+
+    # Détails des étapes
+    steps = []
+    for i in range(len(chemin) - 1):
+        a, b = chemin[i], chemin[i+1]
+        info = metroGraph.graph[a][b]
+        steps.append({
+            "from": a.to_dict(),
+            "to": b.to_dict(),
+            "duration": info["duration"],
+            "routes": sorted(info["routes"])
+        })
+
+    return jsonify({
+        "total_duration": total_duration,
+        "steps": steps
+    })
 
 
 CORS(app)
