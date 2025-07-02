@@ -179,3 +179,113 @@ body {
   vertical-align: middle;
 }
 
+.detail-button {
+  margin-top: 10px;
+  padding: 8px 14px;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: #243c5a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  float: right;
+  font-size: 14px;
+}
+/* Conteneur général */
+.trajet-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  margin-top: 25px;
+}
+
+/* Segment d'une ligne */
+.line-segment {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* Badge rond avec le numéro de la ligne */
+.line-number {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: var(--line-color, #999);
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* Ligne verticale */
+.line-bar {
+  width: 4px;
+  background-color: var(--line-color, #999);
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* Liste des stations */
+.stations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Nom de station */
+.station {
+  font-size: 16px;
+  position: relative;
+  padding-left: 12px;
+}
+
+/* Pastille circulaire pour chaque station */
+.station::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--line-color, #999);
+  border-radius: 50%;
+}
+
+.station.bold {
+  font-weight: bold;
+}
+
+/* Ajoute cette règle pour gérer l'espacement réduit entre stations collées */
+.station.coller {
+  margin-bottom: 0;  /* pas d'espace entre stations collées */
+  padding-bottom: 2px; /* un peu de padding pour visibilité */
+}
+
+.station {
+  margin-bottom: 10px; /* espace normal entre stations */
+}
+
+
+.metro-icon {
+  height: 25px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.station-item {
+  display: flex;
+  align-items: center;
+  background: #f0f0f0;
+  margin: 5px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  font-size: 12px;
+}
+

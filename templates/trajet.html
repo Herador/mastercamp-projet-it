@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Trajet MED</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="../static/styles.css" />
 </head>
 <body>
   <div class="container">
 
-    <!-- Bande bleue IDENTIQUE avec même structure -->
+    <!-- Bande bleue -->
     <div class="bottom-blue small">
       <h1 class="logo">MED</h1>
 
@@ -25,13 +25,17 @@
 
         <div class="info-title">Le trajet le plus rapide :</div>
         <div class="info-content" id="trajet-rapide">À calculer…</div>
+        <button id="btn-details" class="detail-button">Afficher les détails du trajet</button>
+        <div id="details-trajet" class="trajet-detail"></div>
 
         <div class="info-title">Le trajet le plus écologique :</div>
         <div class="info-content" id="trajet-eco">À calculer…</div>
+
+        
       </div>
     </div>
 
-    <!-- Carte ou zone vide à droite -->
+    <!-- Carte -->
     <div id="map"></div>
   </div>
 
@@ -45,18 +49,18 @@
     }).addTo(map);
 
     const metroIcon = L.icon({
-  iconUrl: '../static/logo_metro.png', 
-  iconSize: [20, 15], 
-  iconAnchor: [16, 16],
-  popupAnchor: [0, -16]
-});
+      iconUrl: '../static/logo_metro.png',
+      iconSize: [20, 15],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -16]
+    });
 
     const stopNames = []
 
     fetch('http://localhost/stops')
       .then(response => response.json())
       .then(data => {
-        stations = data.map(stop => stop.name).filter(Boolean);  // on extrait les noms des arrêts
+        stations = data.map(stop => stop.name).filter(Boolean);
 
         data.forEach(stop => {
           stopNames.push(stop.name);
@@ -68,57 +72,138 @@
         });
       })
       .catch(error => console.error('Erreur de chargement des arrêts:', error));
+
     const depart = localStorage.getItem("depart") || "Non défini";
     const arrivee = localStorage.getItem("arrivee") || "Non défini";
 
     document.getElementById("depart").textContent = depart;
     document.getElementById("arrivee").textContent = arrivee;
 
-          fetch("http://localhost/api/lines")
-  .then(response => response.json())
-  .then(lines => {
-    lines.forEach(line => {
-      const polyline = L.polyline(line.coordinates, {
-        color: line.color,
-        weight: 5,
-        opacity: 1,
-        lineJoin: 'round',
-      }).addTo(map);
+    // Lignes
+    fetch("http://localhost/api/lines")
+      .then(response => response.json())
+      .then(lines => {
+        lines.forEach(line => {
+          const polyline = L.polyline(line.coordinates, {
+            color: line.color,
+            weight: 5,
+            opacity: 1,
+            lineJoin: 'round',
+          }).addTo(map);
 
-      polyline.bindPopup(line.name);
+          polyline.bindPopup(line.name);
+        });
+      })
+      .catch(error => console.error("Erreur lors du chargement des lignes :", error));
+
+    // Trajet rapide
+    fetch(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById("trajet-rapide").textContent = "Erreur : " + data.error;
+          return;
+        }
+
+        const container = document.getElementById("trajet-rapide");
+        const totalMin = Math.round(data.total_duration / 60);
+        const allLines = data.steps.flatMap(step => step.routes);
+        const uniqueLines = [...new Set(allLines)];
+
+        const iconsHtml = uniqueLines.map(line => {
+        const imageName = line.toLowerCase().replace("b", "bis"); // gestion des lignes 3bis et 7bis
+        return `<img src="../static/${imageName}.png" alt="Ligne ${line}" class="metro-icon" style="height:30px;margin-right:5px;" />`;
+      }).join(" ");
+
+
+        container.innerHTML = `
+  <div>Durée : <strong>${totalMin} minutes</strong></div>
+  <div>Métro : ${iconsHtml}</div>
+`;
+
+document.getElementById("btn-details").addEventListener("click", () => {
+  const container = document.getElementById("details-trajet");
+  container.innerHTML = "";
+
+  fetch(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        container.innerHTML = `<p style="color:red;">Erreur : ${data.error}</p>`;
+        return;
+      }
+
+      const chemin = data.steps;
+      if (chemin.length === 0) {
+        container.innerHTML = `<p>Pas de chemin trouvé.</p>`;
+        return;
+      }
+
+      const colorMap = {};
+      fetch("http://localhost/api/lines")
+        .then(resp => resp.json())
+        .then(linesData => {
+          linesData.forEach(line => {
+            const name = line.name.replace("Ligne ", "");
+            colorMap[name] = line.color;
+          });
+
+          let currentLine = null;
+          let currentStart = null;
+          let stationCount = 0;
+
+          chemin.forEach((step, index) => {
+            const lineUsed = step.routes[0] || "X";
+
+            if (lineUsed !== currentLine) {
+              if (currentLine && currentStart) {
+                const imageName = currentLine.toLowerCase().replace("b", "bis");
+                const color = colorMap[currentLine] || "#999";
+
+                const div = document.createElement("div");
+                div.className = "station-item";
+                div.innerHTML = `
+                  <img src="../static/${imageName}.png" alt="Ligne ${currentLine}" style="height:25px;margin-right:10px;">
+                  <strong>${currentStart}</strong> ➔ <strong>${step.from.name}</strong>
+                  <span style="color:${color}; margin-left:10px;">(${stationCount} stations)</span>
+                `;
+                container.appendChild(div);
+              }
+              currentLine = lineUsed;
+              currentStart = step.from.name;
+              stationCount = 1;
+            } else {
+              stationCount++;
+            }
+
+            // Dernière étape : afficher l'arrivée finale
+            if (index === chemin.length - 1) {
+              const imageName = currentLine.toLowerCase().replace("b", "bis");
+              const color = colorMap[currentLine] || "#999";
+
+              const div = document.createElement("div");
+              div.className = "station-item";
+              div.innerHTML = `
+                <img src="../static/${imageName}.png" alt="Ligne ${currentLine}" style="height:25px;margin-right:10px;">
+                <strong>${currentStart}</strong> ➔ <strong>${step.to.name}</strong>
+                <span style="color:${color}; margin-left:10px;">(${stationCount} stations)</span>
+              `;
+              container.appendChild(div);
+            }
+          });
+        });
     });
-  })
-  .catch(error => console.error("Erreur lors du chargement des lignes :", error));
-fetch(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`)
-  .then(response => response.json())
-  .then(data => {
-    if (data.error) {
-      document.getElementById("trajet-rapide").textContent = "Erreur : " + data.error;
-      return;
-    }
+});
 
-    const container = document.getElementById("trajet-rapide");
-    const totalMin = Math.round(data.total_duration / 60);
+      
+      })
+      .catch(error => {
+        console.error("Erreur lors du calcul du trajet :", error);
+        document.getElementById("trajet-rapide").textContent = "Erreur lors du calcul.";
+      });
 
-    // Extraire les lignes empruntées (en les rendant uniques)
-    const allLines = data.steps.flatMap(step => step.routes);
-    const uniqueLines = [...new Set(allLines)];
 
-    // Créer les icônes de lignes
-    const iconsHtml = uniqueLines.map(line => {
-      const nom = line.toLowerCase(); // ex: "7"
-      return `<img src="../static/${nom}.png" alt="Ligne ${line}" class="metro-icon" />`;
-    }).join(" ");
-
-    container.innerHTML = `<div>Durée : <strong>${totalMin} minutes</strong></div> <div>Métro : ${iconsHtml}</div>`;
-  })
-  .catch(error => {
-    console.error("Erreur lors du calcul du trajet :", error);
-    document.getElementById("trajet-rapide").textContent = "Erreur lors du calcul.";
-  });
- 
   
-
   </script>
 </body>
-</html>
+</html>  
