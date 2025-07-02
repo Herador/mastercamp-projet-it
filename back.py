@@ -8,8 +8,9 @@ import pickle
 from flask_cors import CORS
 from flask import render_template
 from data.MetroGraph import MetroGraph
+from graph.dijkstra import dijkstra, reconstruire_chemin
 
-path = os.path.join(os.path.dirname(__file__), "data", "metro_graph.pkl")
+path = os.path.join(os.path.dirname(__file__), "data/metro_graph.pkl")
 with open(path, "rb") as f:
     metroGraph = pickle.load(f)
 
@@ -70,12 +71,28 @@ def get_neighbors(stop_id):
 
     return jsonify(results)
 
-'''
+
 @app.route("/shortest-path")
 def get_shortest_path():
-    start = request.args.get("from", "").lower()
-    end = request.args.get("to", "").lower()
-'''
+    start_name = request.args.get("from", "")
+    end_name = request.args.get("to", "")
+
+    start_stop = metroGraph.get_stop_by_name(start_name)
+    end_stop = metroGraph.get_stop_by_name(end_name)
+    print(start_stop)
+
+    if not start_stop or not end_stop:
+        return jsonify({"error": "Arrêts invalides."}), 400
+    
+    distances, pred = dijkstra(metroGraph.graph, start_stop)
+    chemin = reconstruire_chemin(pred, start_stop, end_stop)
+
+    if not chemin:
+        return jsonify({"error": "Aucun chemin trouvé"}), 404
+
+    chemin_json = [s.to_dict() for s in chemin]
+    return jsonify(chemin_json)
+
 
 CORS(app)
 app.run(host='0.0.0.0', port=80)

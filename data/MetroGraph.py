@@ -23,8 +23,12 @@ class MetroGraph:
             self.graph[stop1][stop2] = duration
             self.graph[stop2][stop1] = duration  # graphe non orienté
 
-    def get_stops_by_name(self, name):
-        return [s for s in self.stops.values() if s.name == name]
+    
+    def get_stop_by_name(self,name):
+        for stop in self.stops.values():
+            if stop.name.lower() == name.lower():
+                return stop
+        return None
 
     def voisins(self, stop):
         return self.graph.get(stop, {})

@@ -49,6 +49,7 @@
   popupAnchor: [0, -16]
 });
 
+    const stopNames = []
 
     fetch('http://localhost/stops')
       .then(response => response.json())
@@ -56,6 +57,7 @@
         stations = data.map(stop => stop.name).filter(Boolean);  // on extrait les noms des arrêts
 
         data.forEach(stop => {
+          stopNames.push(stop.name);
           if (stop.lat && stop.lon) {
             L.marker([stop.lat, stop.lon], { icon: metroIcon })
               .addTo(map)
@@ -74,7 +76,7 @@
 
     function showSuggestions(input) {
       const query = input.value.toLowerCase();
-      const results = stations.filter(station => station.toLowerCase().includes(query));
+      const results = stopNames.filter(station => station.toLowerCase().includes(query));
       suggestionsBox.innerHTML = "";
 
       results.forEach(station => {
