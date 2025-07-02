@@ -13,10 +13,12 @@ trips = pd.read_csv('IDFM-gtfs/trips.txt')
 stop_times = pd.read_csv('IDFM-gtfs/stop_times.txt')
 stops = pd.read_csv('IDFM-gtfs/stops.txt')
 
+trips = trips.merge(routes[['route_id', 'route_short_name']], on='route_id', how='left')
+
 # Étapes identiques à celles de votre notebook
 metro_routes = routes[routes['route_type'] == 1]['route_id']
 metro_trips = trips[trips['route_id'].isin(metro_routes)]
-selected_trips = metro_trips.groupby(['route_id', 'direction_id']).head(16).reset_index()
+selected_trips = metro_trips.groupby(['route_short_name', 'direction_id']).head(16).reset_index()
 stop_times = stop_times[stop_times['trip_id'].isin(selected_trips['trip_id'])]
 stop_times = stop_times.sort_values(['trip_id', 'stop_sequence'])
 
@@ -45,6 +47,7 @@ stop_times = stop_times.sort_values(['trip_id', 'stop_sequence'])
 stop_times['next_stop_id'] = stop_times.groupby('trip_id')['stop_id'].shift(-1)
 stop_times['next_arr_sec'] = stop_times.groupby('trip_id')['arr_sec'].shift(-1)
 stop_times['duration'] = stop_times['next_arr_sec'] - stop_times['dep_sec']
+stop_times = stop_times.merge(trips[['trip_id', 'route_short_name']], on='trip_id', how='left')
 
 edges = stop_times.dropna(subset=['next_stop_id']).copy()
 edges['duration'] = edges['next_arr_sec'] - edges['dep_sec']
@@ -53,11 +56,17 @@ edges['v'] = edges['next_stop_id'].map(stop_dict)
 
 graph = defaultdict(dict)
 for row in edges.itertuples(index=False):
-    u, v, w = row.u, row.v, row.duration
+    u, v, w, route = row.u, row.v, row.duration, row.route_short_name
     if pd.notnull(u) and pd.notnull(v):
-        if v not in graph[u] or graph[u][v] > w:
-            graph[u][v] = w
-            graph[v][u] = w
+        if v not in graph[u] or graph[u][v]["duration"] > w:
+            graph[u][v] = {"duration": w, "routes": set([route])}
+        else:
+            graph[u][v]["routes"].add(route)
+        
+        if u not in graph[v] or graph[v][u]["duration"] > w:
+            graph[v][u] = {"duration": w, "routes": set([route])}
+        else:
+            graph[v][u]["routes"].add(route)
 
 # Création du MetroGraph
 g = MetroGraph(stop_dict, edges)
