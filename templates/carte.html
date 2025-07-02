@@ -129,7 +129,11 @@
       }
     });
 
-    
+    searchBtn.addEventListener("click", () => {
+      localStorage.setItem("depart", departInput.value);
+      localStorage.setItem("arrivee", arriveeInput.value);
+    });
+
   </script>
 </body>
 </html>

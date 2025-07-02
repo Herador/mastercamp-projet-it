@@ -3,38 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Carte EFREI Dodo</title>
-  <!-- Style Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- Ta police sympa -->
-  <link href="https://fonts.googleapis.com/css2?family=Klee+One&display=swap" rel="stylesheet" />
-  <!-- Feuille de style -->
+  <title>Trajet MED</title>
   <link rel="stylesheet" href="../static/styles.css" />
 </head>
 <body>
   <div class="container">
-    
-    <!-- Bande bleue avec le formulaire (placée AVANT) -->
-    <div class="bottom-blue small" id="blue-box">
+
+    <!-- Bande bleue IDENTIQUE avec même structure -->
+    <div class="bottom-blue small">
       <h1 class="logo">MED</h1>
-      <div class="form-box" id="form-box">
-        
-        <p class="form-title">On va où ?</p>
-        <input type="text" id="depart" placeholder="Départ" autocomplete="off" />
-        <input type="text" id="arrivee" placeholder="Arrivée" autocomplete="off" />
-        <div class="suggestions" id="suggestions"></div>
+
+      <div class="form-box">
+        <p class="form-title">Ton trajet</p>
+
+        <div class="info-title">Départ :</div>
+        <div class="info-content" id="depart"></div>
+
+        <div class="info-title">Arrivée :</div>
+        <div class="info-content" id="arrivee"></div>
+
+        <div class="info-title">Le trajet le plus rapide :</div>
+        <div class="info-content" id="trajet-rapide">À calculer…</div>
+
+        <div class="info-title">Le trajet le plus écologique :</div>
+        <div class="info-content" id="trajet-eco">À calculer…</div>
       </div>
-      <a href="/trajet" id="search-btn" class="search-button">Recherche</a>
-
-
     </div>
 
-    <!-- Carte Leaflet à droite -->
+    <!-- Carte ou zone vide à droite -->
     <div id="map"></div>
   </div>
 
-  <!-- Script Leaflet -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
+  <script>
+    const depart = localStorage.getItem("depart") || "Non défini";
+    const arrivee = localStorage.getItem("arrivee") || "Non défini";
+
+    document.getElementById("depart").textContent = depart;
+    document.getElementById("arrivee").textContent = arrivee;
+  </script>
 </body>
 </html>
