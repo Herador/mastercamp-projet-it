@@ -1,3 +1,9 @@
+import pickle
+import sys
+import os
+
+# Ajoute le dossier parent du dossier 'graph' au sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import pandas as pd
 import requests
 import unicodedata
@@ -14,21 +20,22 @@ def normalize_name(name):
     return name.strip()
 
 # Backend
-response = requests.get("http://localhost:80/stops")
-data = response.json()
+path = os.path.join(os.path.dirname(__file__), "../data/metro_graph.pkl")
+with open(path, "rb") as f:
+    G = pickle.load(f)
 
 # ✅ Dictionnaire de correspondance normalisé → original
 backend_names_map = {
-    normalize_name(stop["name"]): stop["name"]
-    for stop in data
-    if stop.get("name")
+    normalize_name(stop.name): stop.name
+    for stop in G.stops.values()
+    if stop.name
 }
 
 allowed_stations = set(backend_names_map.keys())
 print("✅ Stations backend (normalisées) :", list(allowed_stations)[:10])
 
 # CSV
-df = pd.read_csv("../data/qualite-de-lair-dans-le-reseau-de-transport-francilien.csv", sep=";")
+df = pd.read_csv("data/qualite-de-lair-dans-le-reseau-de-transport-francilien.csv", sep=";")
 
 csv_stations = set()
 for _, row in df.iterrows():
@@ -45,7 +52,7 @@ print("🔎 Intersection (stations communes) :", list(intersection)[:10])
 pollution_map = {
     "faible": 1,
     "moyenne": 2,
-    "élevée": 3,
+    "eleve": 3,
     "forte": 3,
     "station aérienne": 0
 }
@@ -69,8 +76,18 @@ for _, row in df.iterrows():
 for station, value in station_pollution.items():
     print(f"Station: {station}, Pollution: {value}")
 
-# ✅ Sauvegarde
-with open("station_pollution.json", "w", encoding="utf-8") as f:
-    json.dump(station_pollution, f, ensure_ascii=False, indent=2)
 
-print("✅ Dictionnaire sauvegardé dans 'station_pollution.json'.")
+# Ajout des pollutions au graphe
+count = 0
+
+for stop in G.stops.values():
+    if stop.name in station_pollution:
+        stop.pollution = station_pollution[stop.name]
+        count += 1
+print(f"Pollution ajouté à {count} stations.")
+
+output_path = os.path.join(os.path.dirname(__file__), "../data/metro_graph_with_pollution.pkl")
+with open(output_path, "wb") as f:
+    pickle.dump(G, f)
+
+print(f"✅ Graphe enrichi sauvegardé dans : {output_path}")
