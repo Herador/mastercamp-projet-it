@@ -32,6 +32,59 @@ def dijkstra(graphe, s):
                 relaxation(graphe, x, y, d, pred)
     return d, pred
 
+from copy import deepcopy
+
+#algorithme de yen pour déterminer les k plus courts chemin
+def yen_k_shortest_paths(graphe, source, dest, k):
+    # Premier chemin
+    distances, pred = dijkstra(graphe, source)
+    first_path = reconstruire_chemin(pred, source, dest)
+    if not first_path:
+        return []
+
+    paths = [first_path]
+    candidates = []
+
+    for i in range(1, k):
+        for j in range(len(paths[-1]) - 1):
+            spur_node = paths[-1][j]
+            root_path = paths[-1][:j + 1]
+
+            # Copier le graphe
+            temp_graph = deepcopy(graphe)
+
+            # Supprimer les arêtes qui partagent le même préfixe
+            for p in paths:
+                if len(p) > j and p[:j + 1] == root_path:
+                    u = p[j]
+                    v = p[j + 1]
+                    if v in temp_graph.get(u, {}):
+                        del temp_graph[u][v]
+
+            # Supprimer les nœuds du root_path sauf spur_node
+            for node in root_path[:-1]:
+                temp_graph.pop(node, None)
+
+            # Nouveau chemin depuis spur_node
+            distances_spur, pred_spur = dijkstra(temp_graph, spur_node)
+            spur_path = reconstruire_chemin(pred_spur, spur_node, dest)
+
+            if spur_path and len(spur_path) > 1:
+                total_path = root_path[:-1] + spur_path
+                if total_path not in candidates:
+                    candidates.append(total_path)
+
+        if not candidates:
+            break
+
+        # Trier par longueur de chemin (ou distance si tu veux)
+        candidates.sort(key=lambda x: len(x))
+        next_path = candidates.pop(0)
+        paths.append(next_path)
+
+    return paths
+
+
 # Fonction pour reconstruire le chemin
 def reconstruire_chemin(pred, s, v):
     chemin = []
@@ -80,3 +133,4 @@ if chemin:
     chemin_str = " → ".join(str(stop) for stop in chemin)
     print(f"{source} → {dest} = {distances[dest]} | Chemin : {chemin_str}")
 #print(metroGraph.graph)
+ 

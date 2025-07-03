@@ -8,13 +8,47 @@ import pickle
 from flask_cors import CORS
 from flask import render_template
 from data.MetroGraph import MetroGraph
-from graph.dijkstra import dijkstra, reconstruire_chemin
-import networkx as nx
+from graph.dijkstra import dijkstra, reconstruire_chemin, yen_k_shortest_paths
 
+def calculer_poids_ecologique(chemin, graphe_obj):
+    poids = 0
+    if len(chemin) < 2:
+        return poids
+
+    ligne_prec = graphe_obj.graph[chemin[0]][chemin[1]]["line"]
+
+    for i in range(1, len(chemin) - 1):
+        u = chemin[i]
+        v = chemin[i + 1]
+        ligne_actuelle = graphe_obj.graph[u][v]["line"]
+
+        if ligne_actuelle != ligne_prec:
+            stop_obj = graphe_obj.stops.get(u)
+            if stop_obj and hasattr(stop_obj, "pollution"):
+                poids += stop_obj.pollution
+            ligne_prec = ligne_actuelle
+
+    return poids
 
 path = os.path.join(os.path.dirname(__file__), "data/metro_graph_with_pollution.pkl")
 with open(path, "rb") as f:
     metroGraph = pickle.load(f)
+# Après le pickle.load
+for stop in metroGraph.stops.values():
+    if not hasattr(stop, "pollution"):
+        stop.pollution = None
+
+# Corriger aussi les sommets dans le graph (clés)
+for stop in metroGraph.graph.keys():
+    if not hasattr(stop, "pollution"):
+        stop.pollution = None
+
+# Corriger aussi les stops des voisins
+for voisins in metroGraph.graph.values():
+    for voisin_stop in voisins.keys():
+        if not hasattr(voisin_stop, "pollution"):
+            voisin_stop.pollution = None
+
 
 app = Flask(__name__)
 
@@ -116,12 +150,19 @@ def get_shortest_path():
 
     if not chemin:
         return jsonify({"error": "Aucun chemin trouvé"}), 404
+    
+    def temps_inter(chemin):
+        nb_sommets = len(chemin)
+        return (nb_sommets * 10) - 20
+
 
     # Durée totale
     total_duration = sum(
         metroGraph.graph[chemin[i]][chemin[i+1]]["duration"]
         for i in range(len(chemin) - 1)
     )
+
+    intermediate_time = temps_inter(chemin)
 
     # Détails des étapes
     steps = []
@@ -136,8 +177,45 @@ def get_shortest_path():
         })
 
     return jsonify({
-        "total_duration": total_duration,
+        "total_duration": total_duration+intermediate_time,
         "steps": steps
+    })
+
+@app.route("/api/paths", methods=["GET"])
+def get_paths():
+    from_name = request.args.get("from")
+    to_name = request.args.get("to")
+
+    if not from_name or not to_name:
+        return jsonify({"error": "Paramètres 'from' et 'to' obligatoires"}), 400
+
+    source = metroGraph.get_stop_by_name(from_name)
+    dest = metroGraph.get_stop_by_name(to_name)
+
+    if not source or not dest:
+        return jsonify({"error": "Stations non trouvées"}), 404
+
+    # Dijkstra
+    distances, pred = dijkstra(metroGraph.graph, source)
+    chemin_dijkstra = reconstruire_chemin(pred, source, dest)
+    poids_dijkstra = calculer_poids_ecologique(chemin_dijkstra, metroGraph)
+
+    # Yen (4 chemins)
+    k_chemins = yen_k_shortest_paths(metroGraph.graph, source, dest, 4)
+    alternative_paths = []
+    for c in k_chemins:
+        poids = calculer_poids_ecologique(c, metroGraph)
+        alternative_paths.append({
+            "steps": [str(stop) for stop in c],
+            "ecological_weight": poids
+        })
+
+    return jsonify({
+        "fastest_path": {
+            "steps": [str(stop) for stop in chemin_dijkstra],
+            "ecological_weight": poids_dijkstra
+        },
+        "alternative_paths": alternative_paths
     })
 
 
@@ -182,6 +260,7 @@ def get_lines():
 
 
 
+
 def get_line_color(name):
     palette = {
         "1": "#F6C343", "2": "#214999", "3": "#877829",
@@ -194,7 +273,9 @@ def get_line_color(name):
 
 
 CORS(app)
+
 app.run(host='0.0.0.0', port=80)
+
 
 
 

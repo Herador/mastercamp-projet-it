@@ -50,11 +50,11 @@ intersection = allowed_stations.intersection(csv_stations)
 print("🔎 Intersection (stations communes) :", list(intersection)[:10])
 
 pollution_map = {
-    "faible": 1,
-    "moyenne": 2,
-    "eleve": 3,
-    "forte": 3,
-    "station aérienne": 0
+    "faible": 2,
+    "moyenne": 3,
+    "eleve": 4,
+    "forte": 4,
+    "station aérienne": 1
 }
 
 station_pollution = {}
