@@ -109,7 +109,7 @@ body {
 .form-box {
   background-color: white;
   border-radius: 12px;
-  padding: 10px;
+  padding: 0px 10px;
   width: 100%;
   box-sizing: border-box;
   color: black;
@@ -192,11 +192,11 @@ body {
   background-color: white;
   color: #0078c8;
   border-radius: 8px;
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .title {
-  font-size: 32px;
+  font-size: 24px;
   margin: 0px;
 }
 
@@ -204,8 +204,8 @@ body {
    ICÔNE MÉTRO
    ============================================ */
 .metro-icon {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 25px;
   margin-right: 5px;
   vertical-align: middle;
 }
