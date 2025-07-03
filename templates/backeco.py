@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 import unicodedata
 import re
+import json
 
 def normalize_name(name):
     name = name.strip().lower()
@@ -13,11 +14,18 @@ def normalize_name(name):
     return name.strip()
 
 # Backend
-response = requests.get("http://localhost/stops")
+response = requests.get("http://localhost:80/stops")
 data = response.json()
-allowed_stations = set(normalize_name(stop["name"]) for stop in data if stop.get("name"))
 
-print("✅ Stations backend (normalisées) :", list(allowed_stations)[:20])
+# ✅ Dictionnaire de correspondance normalisé → original
+backend_names_map = {
+    normalize_name(stop["name"]): stop["name"]
+    for stop in data
+    if stop.get("name")
+}
+
+allowed_stations = set(backend_names_map.keys())
+print("✅ Stations backend (normalisées) :", list(allowed_stations)[:10])
 
 # CSV
 df = pd.read_csv("../data/qualite-de-lair-dans-le-reseau-de-transport-francilien.csv", sep=";")
@@ -28,17 +36,17 @@ for _, row in df.iterrows():
     if isinstance(station, str):
         csv_stations.add(normalize_name(station))
 
-print("📄 Stations CSV (normalisées) :", list(csv_stations)[:20])
+print("📄 Stations CSV (normalisées) :", list(csv_stations)[:10])
 
 # Intersection
 intersection = allowed_stations.intersection(csv_stations)
-print("🔎 Intersection (stations communes) :", list(intersection)[:20])
+print("🔎 Intersection (stations communes) :", list(intersection)[:10])
 
 pollution_map = {
-    "pollution faible": 1,
-    "pollution moyenne": 2,
-    "pollution élevée": 3,
-    "pollution forte": 3,
+    "faible": 1,
+    "moyenne": 2,
+    "élevée": 3,
+    "forte": 3,
     "station aérienne": 0
 }
 
@@ -52,16 +60,17 @@ for _, row in df.iterrows():
         niveau_clean = niveau.strip().lower()
         station_clean = normalize_name(station)
 
-        print(f"Test station: {station_clean}, niveau: {niveau_clean}")
-
         if station_clean in intersection and niveau_clean in pollution_map:
-            station_pollution[station_clean] = pollution_map[niveau_clean]
+            if station_clean in backend_names_map:
+                original_name = backend_names_map[station_clean]
+                station_pollution[original_name] = pollution_map[niveau_clean]
 
-if station_pollution:
-    print("✅ Dictionnaire pollution (extrait) :", list(station_pollution.items())[:60])
-else:
-    print("❌ Aucun résultat — aucune station matchée.")
+# ✅ Affichage final
+for station, value in station_pollution.items():
+    print(f"Station: {station}, Pollution: {value}")
 
+# ✅ Sauvegarde
+with open("station_pollution.json", "w", encoding="utf-8") as f:
+    json.dump(station_pollution, f, ensure_ascii=False, indent=2)
 
-
-
+print("✅ Dictionnaire sauvegardé dans 'station_pollution.json'.")
