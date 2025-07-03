@@ -140,6 +140,11 @@
         // Durée totale en minutes arrondie
         const totalMin = Math.round(data.total_duration / 60);
 
+        //const distance = ((totalMin*60) * 8.33) / 1000
+        // Emission = distance en kilomètre x 3.8
+        const emissionsMetro = Math.round(((totalMin*60) * 8.33) / 1000 * 3.8)
+        const emissionsVoiture = Math.round(((totalMin*60) * 8.33) / 1000 * 180)
+
         // Liste des lignes de métro utilisées (sans doublons)
         const uniqueLines = [...new Set(data.steps.map(step => step.routes[0]))];
 
@@ -152,6 +157,11 @@
         // Affiche la durée et les icônes des lignes utilisées
         container.innerHTML = `
           <div>Durée : <strong>${totalMin} minutes</strong></div>
+          <div>Émissions : <br>Metro <strong>${emissionsMetro} gCO2</strong><br>
+          Voiture : <strong>${emissionsVoiture} gCO2</strong>
+          <div class="emissions-evite">Émissions évitées : <strong>${emissionsVoiture - emissionsMetro} gCO2</strong></div>
+          </div>
+
           <div>Métro : ${iconsHtml}</div>
         `;
 

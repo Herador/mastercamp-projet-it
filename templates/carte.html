@@ -82,7 +82,7 @@
           if (stop.lat && stop.lon) { // si la station a des coordonnées GPS
             L.marker([stop.lat, stop.lon], { icon: metroIcon }) // on crée un marqueur
               .addTo(map) // on l’ajoute à la carte
-              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}`); // popup affiché au clic sur la station
+              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}<br>Pollution: ${stop.pollution}`); // popup affiché au clic sur la station
           }
         });
       })

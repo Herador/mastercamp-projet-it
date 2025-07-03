@@ -12,7 +12,7 @@ from graph.dijkstra import dijkstra, reconstruire_chemin
 import networkx as nx
 
 
-path = os.path.join(os.path.dirname(__file__), "data/metro_graph.pkl")
+path = os.path.join(os.path.dirname(__file__), "data/metro_graph_with_pollution.pkl")
 with open(path, "rb") as f:
     metroGraph = pickle.load(f)
 

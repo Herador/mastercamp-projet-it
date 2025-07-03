@@ -4,6 +4,7 @@ class Stop:
         self.name = name
         self.lat = float(lat)
         self.lon = float(lon)
+        self.pollution = None
 
     def __eq__(self, other):
         return isinstance(other, Stop) and self.id == other.id
@@ -12,7 +13,7 @@ class Stop:
         return hash(self.id)
 
     def __repr__(self):
-        return f"{self.name} ({self.id})"
+        return f"{self.name} ({self.id}), pollution: {self.pollution}"
     
     def __lt__(self, other):
         return self.id < other.id
@@ -22,6 +23,7 @@ class Stop:
             "id": self.id,
             "name": self.name,
             "lat": self.lat,
-            "lon": self.lon
+            "lon": self.lon,
+            "pollution": self.pollution
         }
 
