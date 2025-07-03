@@ -337,3 +337,8 @@ body {
 #details-trajet {
   display: none;
 }
+
+.emissions-evite {
+  font-style: italic;
+  color: green;
+}
