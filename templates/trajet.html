@@ -47,7 +47,7 @@
         <div id="details-trajet" class="trajet-detail"></div>
 
         <!-- Affiche le trajet le plus écologique calculé -->
-        <div class="info-title">Le trajet le plus écologique :</div>
+        <div class="info-title">trajet alternatif "respirable" :</div>
         <div class="info-content" id="trajet-eco">À calculer…</div>
       </div>
     </div>
@@ -64,8 +64,9 @@
     const map = L.map('map').setView([48.857, 2.35], 13);
 
     // Ajout des tuiles (images) de la carte depuis un fournisseur libre
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors & CartoDB', // Crédits à OpenStreetMap
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
       maxZoom: 18
     }).addTo(map);
 
