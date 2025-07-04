@@ -3,11 +3,9 @@ import os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 from flask import Flask, jsonify, request
-#from stop import Stop
 import pickle
 from flask_cors import CORS
 from flask import render_template
-from data.MetroGraph import MetroGraph
 from graph.dijkstra import dijkstra, reconstruire_chemin, yen_k_shortest_paths
 
 def calculer_poids_ecologique(chemin, graphe_obj):
@@ -64,9 +62,33 @@ def show_carte():
 def show_trajet():
     return render_template("trajet.html")
 
+# Ne renvoie que les stops commerciaux (pas physiques)
 @app.route("/stops")
-def get_stops():
-    return jsonify([stop.to_dict() for stop in metroGraph.stops.values()])
+def get_simplified_stops():
+    from collections import defaultdict
+
+    grouped = defaultdict(list)
+
+    for stop in metroGraph.stops.values():
+        key = stop.parent_station if stop.parent_station else stop.id
+        grouped[key].append(stop)
+
+    simplified = []
+    for station_id, stops in grouped.items():
+        lat = sum(s.lat for s in stops) / len(stops)
+        lon = sum(s.lon for s in stops) / len(stops)
+        name = stops[0].name  # tous les quais de la station ont le même nom
+        pollution = next((s.pollution for s in stops if s.pollution is not None), None)
+        simplified.append({
+            "id": station_id,
+            "name": name,
+            "lat": lat,
+            "lon": lon,
+            "pollution": pollution
+        })
+
+    return jsonify(simplified)
+
 
 @app.route("/stops/<stop_id>")
 def get_stop(stop_id):
@@ -224,29 +246,43 @@ def get_paths():
 def get_lines():
     from collections import defaultdict
 
-    # Dictionnaire {ligne: set de segments réellement consécutifs}
     segments_par_ligne = defaultdict(set)
     seen = set()
 
+    # Dictionnaire pour regrouper les coordonnées par station mère
+    station_coords = {}
+    for stop in metroGraph.stops.values():
+        parent_id = stop.parent_station if stop.parent_station else stop.id
+        if parent_id not in station_coords:
+            station_coords[parent_id] = {
+                "name": stop.name,
+                "lat": stop.lat,
+                "lon": stop.lon
+            }
+
     for stop1, voisins in metroGraph.graph.items():
         for stop2, info in voisins.items():
-            # Éviter les doublons (A,B) == (B,A)
             key = tuple(sorted([stop1.id, stop2.id]))
             if key in seen:
                 continue
             seen.add(key)
 
-            if (stop1.name == "Michel-Ange - Molitor" and stop2.name == "Porte d'Auteuil") or \
-                        (stop2.name == "Michel-Ange - Molitor" and stop1.name == "Porte d'Auteuil"):
-                            continue  # on saute cette liaison erronée
+            # On récupère les stations commerciales (mères)
+            parent1 = stop1.parent_station if stop1.parent_station else stop1.id
+            parent2 = stop2.parent_station if stop2.parent_station else stop2.id
+
+            # Sauter si c’est une liaison à l’intérieur de la même station commerciale
+            if parent1 == parent2:
+                continue
+
+            coord1 = (round(station_coords[parent1]["lat"], 6), round(station_coords[parent1]["lon"], 6))
+            coord2 = (round(station_coords[parent2]["lat"], 6), round(station_coords[parent2]["lon"], 6))
+            segment = tuple(sorted([coord1, coord2]))
 
             for route in info["routes"]:
-                coord1 = (round(stop1.lat, 6), round(stop1.lon, 6))
-                coord2 = (round(stop2.lat, 6), round(stop2.lon, 6))
-                segment = tuple(sorted([coord1, coord2]))  # pour éviter duplication inversée
-                segments_par_ligne[route].add(segment)
+                if route != "transfer":  # ne pas tracer les correspondances à pied
+                    segments_par_ligne[route].add(segment)
 
-    # Construction du GeoJSON par segment
     lignes_geojson = []
     for route, segments in segments_par_ligne.items():
         for coord1, coord2 in segments:
@@ -257,8 +293,6 @@ def get_lines():
             })
 
     return jsonify(lignes_geojson)
-
-
 
 
 def get_line_color(name):
