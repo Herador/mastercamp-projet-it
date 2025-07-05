@@ -39,7 +39,9 @@ stop_dict = {}
 
 for row in physical_stops.itertuples(index=False):
     name = parent_dict.get(row.parent_station, row.stop_name)
-    stop = Stop(row.stop_id, name, row.stop_lat, row.stop_lon)
+    accessible = True if row.wheelchair_boarding == 1 else False
+    
+    stop = Stop(row.stop_id, name, row.stop_lat, row.stop_lon, accessible)
     stop.parent_station = row.parent_station
     stop_dict[row.stop_id] = stop
     

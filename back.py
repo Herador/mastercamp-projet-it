@@ -79,12 +79,14 @@ def get_simplified_stops():
         lon = sum(s.lon for s in stops) / len(stops)
         name = stops[0].name  # tous les quais de la station ont le même nom
         pollution = next((s.pollution for s in stops if s.pollution is not None), None)
+        accessible = any(s.accessible for s in stops)
         simplified.append({
             "id": station_id,
             "name": name,
             "lat": lat,
             "lon": lon,
-            "pollution": pollution
+            "pollution": pollution,
+            "accessible": accessible
         })
 
     return jsonify(simplified)
