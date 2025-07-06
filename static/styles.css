@@ -1,140 +1,114 @@
-/* ============================================
-   IMPORT DE LA POLICE GOOGLE FONTS
-   ============================================ */
 @import url('https://fonts.googleapis.com/css2?family=Klee+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap');
 
-/* ============================================
-   STYLES GÉNÉRAUX DU BODY
-   ============================================ */
 body {
   margin: 0;
   padding: 0;
   font-family: 'Klee One', cursive;
-  background-color: #0078c8; /* Bleu principal de fond */
+  background-color: #2772a8; /* fond bleu foncé comme dans la première version */
+  color: #fff;
 }
 
-/* ============================================
-   PAGE D'ACCUEIL - CONTENEUR PRINCIPAL
-   ============================================ */
 .container_accueil {
   display: flex;
   flex-direction: column;
-  align-items: center;       /* Centrer horizontalement */
-  justify-content: center;   /* Centrer verticalement */
-  height: 90vh;             /* Hauteur pleine page */
+  align-items: center;
+  justify-content: center;
+  height: 90vh;
   text-align: center;
-  color: white;              /* Texte blanc */
 }
 
-/* Image du train sur la page d'accueil */
 .train-image {
   max-width: 150px;
-
-
 }
 
-/* Texte de bienvenue */
 .welcome {
   font-size: 24px;
-    margin: 0px 30px 50px 30px;
+  margin: 0px 30px 50px 30px;
   line-height: 1.5;
 }
 
-/* Bouton "Démarrer" sur la page d'accueil */
 .start-button {
-  background-color: white;
-  color: #0078c8;
+  background-color: #509cc8; /* bleu clair bouton */
+  color: #fff;
   border: none;
   padding: 10px 20px;
   font-size: 24px;
   border-radius: 15px;
   text-decoration: none;
   transition: 0.3s;
+  cursor: pointer;
 }
 
 .start-button:hover {
-  background-color: #e0e0e0;
+  background-color: #82a4cb;
 }
 
-/* ============================================
-   CONTENEUR PRINCIPAL AVEC CARTE ET PANNEAU LATÉRAL
-   ============================================ */
 .container {
   display: flex;
-  flex-direction: row; /* Organisation en ligne : carte + panneau */
-  height: 100vh;       /* Hauteur pleine page */
+  flex-direction: row;
+  height: 100vh;
 }
 
-/* ============================================
-   CARTE LEAFLET
-   ============================================ */
 #map {
-  flex: 1;       /* Prend tout l'espace restant */
-  height: 100%;  /* Hauteur pleine */
+  flex: 1;
+  height: 100%;
 }
 
-/* ============================================
-   PANNEAU LATÉRAL BLEU (SECTION DROITE)
-   ============================================ */
 .bottom-blue {
   width: 300px;
-  background-color: #0078c8;
+  background-color: #2772a8;
   padding: 40px 30px;
   flex-direction: column;
   align-items: center;
-  color: white;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
   font-family: 'Klee One', cursive;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); /* Ombre portée à gauche */
 }
 
-/* Modificateurs pour le panneau */
 .bottom-blue.small {
-  justify-content: center;  /* Centrer verticalement */
+  justify-content: center;
 }
 
 .bottom-blue.large {
-  justify-content: flex-start; /* Aligner en haut */
+  justify-content: flex-start;
 }
 
-/* ============================================
-   FORMULAIRE - TITRE
-   ============================================ */
 .form-title {
   font-size: 20px;
   margin-bottom: 20px;
 }
 
-/* ============================================
-   FORMULAIRE - CONTENEUR INPUTS
-   ============================================ */
 .form-box {
-  background-color: white;
+  background-color: #fff;
   border-radius: 12px;
-  padding: 0px 10px;
+  padding: 0 10px;
   width: 100%;
   box-sizing: border-box;
-  color: black;
+  color: #000;
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Espacement vertical entre inputs */
+  gap: 15px;
 }
 
 .form-box input {
-  border: 1px solid #ccc;
+  border: 1px solid #9c9c9c;
   border-radius: 8px;
   padding: 10px;
   font-family: 'Klee One', cursive;
 }
 
-/* ============================================
-   SUGGESTIONS DE RECHERCHE
-   ============================================ */
+.form-box input:focus {
+  border-color: #509cc8;
+}
+
 .suggestions {
   display: flex;
   flex-direction: column;
   gap: 8px;
   max-height: 150px;
-  overflow-y: auto; /* Scroll si trop de suggestions */
+  overflow-y: auto;
 }
 
 .suggestion-item {
@@ -143,19 +117,17 @@ body {
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s;
+  color: #000;
 }
 
 .suggestion-item:hover {
-  background-color: #ddd;
+  background-color: #e5ecf4;
 }
 
-/* ============================================
-   BOUTON RECHERCHE
-   ============================================ */
 .search-button {
   margin-top: 20px;
-  background-color: #085A8C;
-  color: white;
+  background-color: #509cc8;
+  color: #fff;
   border: none;
   padding: 10px 110px;
   font-size: 16px;
@@ -163,26 +135,26 @@ body {
   cursor: pointer;
   transition: background-color 0.3s;
   text-decoration: none;
-  display: none; /* Caché par défaut */
+  display: none;
 }
 
 .search-button:hover {
-  background-color: #0b4264;
+  background-color: #82a4cb;
 }
 
-/* ============================================
-   LOGO PRINCIPAL
-   ============================================ */
 .logo {
-  color: white;
-  font-size: 72px;
+  color: #fff;
+  font-size: 56px;
   margin: 0 0 40px 0;
   text-align: center;
+  font-family: 'Homemade Apple', cursive;
 }
 
-/* ============================================
-   TITRES ET CONTENUS D'INFORMATIONS
-   ============================================ */
+.logoaccueil{
+  font-family: 'Homemade Apple', cursive;
+
+}
+
 .info-title {
   font-weight: bold;
   font-size: 18px;
@@ -190,20 +162,18 @@ body {
 }
 
 .info-content {
-  background-color: white;
-  color: #0078c8;
+  background-color: #fff;
+  color: #2772a8;
   border-radius: 8px;
   font-size: 16px;
+  padding: 10px;
 }
 
 .title {
   font-size: 24px;
-  margin: 0px;
+  margin: 0;
 }
 
-/* ============================================
-   ICÔNE MÉTRO
-   ============================================ */
 .metro-icon {
   width: 30px;
   height: 25px;
@@ -211,25 +181,23 @@ body {
   vertical-align: middle;
 }
 
-/* ============================================
-   BOUTON DÉTAILS
-   ============================================ */
 .detail-button {
   margin-top: 10px;
   padding: 8px 14px;
   font-weight: bold;
   cursor: pointer;
-  background-color: #243c5a;
-  color: white;
+  background-color: #7488b7;
+  color: #fff;
   border: none;
   border-radius: 6px;
   float: right;
   font-size: 14px;
 }
 
-/* ============================================
-   DÉTAILS DU TRAJET
-   ============================================ */
+.detail-button:hover {
+  background-color: #509cc8;
+}
+
 .trajet-detail {
   display: flex;
   flex-direction: column;
@@ -237,23 +205,19 @@ body {
   margin-top: 25px;
 }
 
-/* ============================================
-   SEGMENT D'UNE LIGNE DE TRANSPORT
-   ============================================ */
 .line-segment {
   display: flex;
   align-items: flex-start;
   gap: 10px;
 }
 
-/* Badge rond avec numéro de ligne */
 .line-number {
   flex-shrink: 0;
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: var(--line-color, #999);
-  color: white;
+  background-color: var(--line-color, #2772a8);
+  color: #fff;
   font-weight: bold;
   font-size: 14px;
   display: flex;
@@ -262,31 +226,27 @@ body {
   margin-top: 4px;
 }
 
-/* Barre verticale représentant la ligne */
 .line-bar {
   width: 4px;
-  background-color: var(--line-color, #999);
+  background-color: var(--line-color, #2772a8);
   flex-grow: 0;
   flex-shrink: 0;
   margin-top: 4px;
 }
 
-/* Liste des stations sur la ligne */
 .stations-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-/* Nom de chaque station */
 .station {
   font-size: 16px;
   position: relative;
   padding-left: 12px;
-  margin-bottom: 10px; /* espace entre stations */
+  margin-bottom: 10px;
 }
 
-/* Pastille circulaire devant chaque station */
 .station::before {
   content: "";
   position: absolute;
@@ -294,37 +254,30 @@ body {
   top: 7px;
   width: 8px;
   height: 8px;
-  background-color: var(--line-color, #999);
+  background-color: var(--line-color, #2772a8);
   border-radius: 50%;
 }
 
-/* Station mise en valeur (en gras) */
 .station.bold {
   font-weight: bold;
 }
 
-/* Gestion de l'espacement réduit entre stations collées */
 .station.coller {
-  margin-bottom: 0;    /* Pas d'espace entre stations collées */
-  padding-bottom: 2px; /* Petit padding pour visibilité */
+  margin-bottom: 0;
+  padding-bottom: 2px;
 }
 
-/* ============================================
-   ICÔNE MÉTRO (version petite)
-   ============================================ */
 .metro-icon {
   height: 25px;
   margin-right: 5px;
   vertical-align: middle;
 }
 
-/* ============================================
-   ÉLÉMENT DE LISTE DE STATIONS (style conteneur)
-   ============================================ */
 .station-item {
   display: flex;
   align-items: center;
-  background: #f0f0f0;
+  background-color: #509cc8;
+  color: #fff;
   margin: 20px 0;
   padding: 8px 12px;
   border-radius: 8px;
@@ -332,9 +285,6 @@ body {
   font-size: 16px;
 }
 
-/* ============================================
-   DÉTAILS DU TRAJET (INITIALISÉ EN MASQUÉ)
-   ============================================ */
 #details-trajet {
   display: none;
 }
@@ -342,4 +292,29 @@ body {
 .emissions-evite {
   font-style: italic;
   color: green;
+}
+
+.info.legend {
+  background: white;
+  color: #000;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  font-size: 16px;
+}
+
+
+.trajet-item {
+  margin-bottom: 20px; /* espace entre chaque trajet */
+  transition: background-color 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 10px;
+  color: #000000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.trajet-item:hover {
+  background-color: #509cc86d; /* fond plus clair au hover */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
