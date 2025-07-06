@@ -166,7 +166,7 @@ body {
   color: #2772a8;
   border-radius: 8px;
   font-size: 16px;
-  padding: 10px;
+  padding: 0px;
 }
 
 .title {
@@ -315,6 +315,6 @@ body {
 }
 
 .trajet-item:hover {
-  background-color: #509cc86d; /* fond plus clair au hover */
+  background-color: #b8dbf298; /* fond plus clair au hover */
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
