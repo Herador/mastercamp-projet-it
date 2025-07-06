@@ -60,19 +60,26 @@
   document.getElementById("arrivee").textContent = arrivee;
 
   let colorMap = {};
-  fetch("http://localhost/api/lines")
-    .then(resp => resp.json())
-    .then(linesData => {
-      linesData.forEach(line => {
-        const name = line.name.replace("Ligne ", "");
-        colorMap[name] = line.color;
-      });
-    })
-    .catch(error => console.error("Erreur chargement des couleurs lignes :", error));
 
-  // Variables pour markers et tracés trajet (utilisés pour afficher le trajet sur la carte)
+  // Charger couleurs des lignes et ensuite charger les trajets
+  function loadColorMap() {
+    return fetch("http://localhost/api/lines")
+      .then(resp => resp.json())
+      .then(linesData => {
+        linesData.forEach(line => {
+          const name = line.name.replace("Ligne ", "");
+          colorMap[name] = line.color;
+        });
+      })
+      .catch(error => {
+        console.error("Erreur chargement des couleurs lignes :", error);
+        // On laisse colorMap vide, couleurs par défaut seront noires
+      });
+  }
+
   let trajetMarkers = [];
   let trajetLayers = [];
+
   function clearTrajet() {
     trajetMarkers.forEach(marker => map.removeLayer(marker));
     trajetMarkers = [];
@@ -80,71 +87,65 @@
     trajetLayers = [];
   }
 
-  // Affiche le trajet sur la carte avec markers et polylignes
-  function displayTrajetOnMap(data) {
-    clearTrajet();
+function displayTrajetOnMap(data) {
+  clearTrajet();
+  if (!data.steps || data.steps.length === 0) return;
 
-    if (!data.steps || data.steps.length === 0) return;
+  data.steps.forEach(step => {
+    const lineName = step.routes[0];
+    if (!lineName || lineName.toLowerCase().includes("transfer")) {
+      // Ignorer les étapes de transfert
+      return;
+    }
 
-    data.steps.forEach(step => {
-      // Pour le point de départ de l'étape
-      if (step.from.lat && step.from.lon) {
-        // Déterminer niveau pollution, par défaut 1 si absent
-        const pollutionLevelFrom = Math.max(0, Math.min(3, step.from.pollution ?? 1));
+    if (step.from.lat && step.from.lon) {
+      const pollutionLevelFrom = Math.max(0, Math.min(3, step.from.pollution ?? 1));
+      const pollutionIconFrom = L.icon({
+        iconUrl: `../static/P${pollutionLevelFrom}.png`,
+        iconSize: [25, 25],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16]
+      });
+      const markerFrom = L.marker([step.from.lat, step.from.lon], { icon: pollutionIconFrom }).addTo(map);
+      markerFrom.bindPopup(`${step.from.name}`);
+      trajetMarkers.push(markerFrom);
+    }
 
-        const pollutionIconFrom = L.icon({
-          iconUrl: `../static/P${pollutionLevelFrom}.png`,
-          iconSize: [25, 25],
-          iconAnchor: [16, 16],
-          popupAnchor: [0, -16]
-        });
+    if (step.to.lat && step.to.lon) {
+      const pollutionLevelTo = Math.max(0, Math.min(3, step.to.pollution ?? 1));
+      const pollutionIconTo = L.icon({
+        iconUrl: `../static/P${pollutionLevelTo}.png`,
+        iconSize: [25, 25],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16]
+      });
+      const markerTo = L.marker([step.to.lat, step.to.lon], { icon: pollutionIconTo }).addTo(map);
+      markerTo.bindPopup(`${step.to.name}`);
+      trajetMarkers.push(markerTo);
+    }
 
-        const markerFrom = L.marker([step.from.lat, step.from.lon], { icon: pollutionIconFrom }).addTo(map);
-        markerFrom.bindPopup(`${step.from.name}`);
-        trajetMarkers.push(markerFrom);
-      }
+    const color = colorMap[lineName] || "#000000";
+    const polyline = L.polyline([[step.from.lat, step.from.lon], [step.to.lat, step.to.lon]], { color }).addTo(map);
+    trajetLayers.push(polyline);
+  });
 
-      // Pour le point d'arrivée de l'étape
-      if (step.to.lat && step.to.lon) {
-        const pollutionLevelTo = Math.max(0, Math.min(3, step.to.pollution ?? 1));
+  const group = new L.featureGroup([...trajetMarkers, ...trajetLayers]);
+  map.fitBounds(group.getBounds().pad(0.2));
+}
 
-        const pollutionIconTo = L.icon({
-          iconUrl: `../static/P${pollutionLevelTo}.png`,
-          iconSize: [25, 25],
-          iconAnchor: [16, 16],
-          popupAnchor: [0, -16]
-        });
 
-        const markerTo = L.marker([step.to.lat, step.to.lon], { icon: pollutionIconTo }).addTo(map);
-        markerTo.bindPopup(`${step.to.name}`);
-        trajetMarkers.push(markerTo);
-      }
 
-      // Couleur ligne
-      const lineName = step.routes[0];
-      const color = colorMap[lineName] || "#000000";
-
-      const polyline = L.polyline([[step.from.lat, step.from.lon], [step.to.lat, step.to.lon]], { color }).addTo(map);
-      trajetLayers.push(polyline);
-    });
-
-    // Ajuste la vue pour afficher tout le trajet
-    const group = new L.featureGroup([...trajetMarkers, ...trajetLayers]);
-    map.fitBounds(group.getBounds().pad(0.2));
-  }
-
-  // Fonction pour afficher résumé minimal (icônes + temps)
   function formatSummary(data) {
-    const totalMin = Math.round(data.total_duration / 60);
-    const uniqueLines = [...new Set(data.steps.map(step => step.routes[0]))];
-    const iconsHtml = uniqueLines.map(line => {
-      const imageName = line.toLowerCase().replace("b", "bis");
-      return `<img src="../static/${imageName}.png" alt="Ligne ${line}" class="metro-icon" />`;
-    }).join(" ");
-    return { totalMin, iconsHtml };
-  }
+  const totalMin = Math.round(data.total_duration / 60);
+  const uniqueLines = [...new Set(data.steps.map(step => step.routes[0]))]
+    .filter(line => line && !line.toLowerCase().includes("transfer"));
+  const iconsHtml = uniqueLines.map(line => {
+    const imageName = line.toLowerCase().replace("b", "bis");
+    return `<img src="../static/${imageName}.png" alt="Ligne ${line}" class="metro-icon" />`;
+  }).join(" ");
+  return { totalMin, iconsHtml };
+}
 
-  // Fonction pour afficher détails complets dans la case
   function formatDetails(data) {
   if (data.error) return `<p style="color:red;">Erreur : ${data.error}</p>`;
   if (!data.steps || data.steps.length === 0) return `<p>Pas de chemin trouvé.</p>`;
@@ -159,6 +160,7 @@
   let segmentStations = [];
 
   function renderSegment(lineName, stations) {
+    if (!lineName || lineName.toLowerCase().includes("transfer")) return ""; // ignore transfer lines
     const color = colorMap[lineName] || "#000000";
     const imageName = lineName.toLowerCase().replace("b", "bis");
     let segmentHtml = `
@@ -180,23 +182,28 @@
     const step = data.steps[i];
     const line = step.routes[0];
 
-    // Si on change de ligne, on affiche le segment précédent et on démarre un nouveau
+    if (!line || line.toLowerCase().includes("transfer")) {
+      // ignore transfer steps but add arrival station to last segment if possible
+      if (segmentStations.length > 0) {
+        segmentStations.push(step.to.name);
+      }
+      continue;
+    }
+
+    // Changement de ligne
     if (line !== currentLine) {
       if (segmentStations.length > 0) {
         html += renderSegment(currentLine, segmentStations);
-        // Trait gris changement métro sauf pour la toute première ligne
-        html += `<div style="margin: 10px 50px; border-left: 4px solid gray; padding-left: 10px; font-style: italic; color: #555;">Changement de métro</div>`;
+        if (currentLine !== null) {
+          html += `<div style="margin: 10px 50px; border-left: 4px solid gray; padding-left: 10px; font-style: italic; color: #555;">Changement de métro</div>`;
+        }
       }
       currentLine = line;
       segmentStations = [];
-    }
-
-    // Pour chaque étape, on ajoute la station de départ
-    if (segmentStations.length === 0) {
       segmentStations.push(step.from.name);
     }
 
-    // Toujours ajouter la station d'arrivée de l'étape (pour avoir tous les arrêts)
+    // Ajouter la station d'arrivée de l'étape
     segmentStations.push(step.to.name);
   }
 
@@ -205,9 +212,9 @@
     html += renderSegment(currentLine, segmentStations);
   }
 
-
   // Ajout des émissions de CO2
   html += `
+   <div style="background-color: #d4edda; padding: 10px; border-radius: 5px; margin-top: 15px;">
     <div>Émissions de CO2 :</div>
     <ul>
       <li>Métro : <strong>${emissionsMetro} gCO2</strong></li>
@@ -220,61 +227,30 @@
 }
 
 
-
-  // Charger et afficher trajet rapide + affichage carte
-  function loadTrajetRapide() {
-    fetch(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`)
+  // Charge un trajet, met à jour résumé et détails, affiche sur carte
+  function loadTrajet(url, containerId, showOnMap = true) {
+    fetch(url)
       .then(res => res.json())
       .then(data => {
-        const container = document.getElementById("trajet-rapide");
+        const container = document.getElementById(containerId);
         const summaryDiv = container.querySelector(".trajet-summary");
-        const detailsDiv = document.getElementById("details-rapide");
+        const detailsDiv = container.querySelector(".trajet-details");
 
-        if(data.error){
+        if (data.error) {
           summaryDiv.textContent = "Erreur lors du calcul";
+          detailsDiv.innerHTML = "";
+          if (showOnMap) clearTrajet();
           return;
         }
 
         const { totalMin, iconsHtml } = formatSummary(data);
         summaryDiv.innerHTML = `${iconsHtml} Durée : <strong>${totalMin} min</strong>`;
-
         detailsDiv.innerHTML = formatDetails(data);
 
-        // Afficher le trajet rapide sur la carte même si la case est fermée
-        displayTrajetOnMap(data);
+        if (showOnMap) displayTrajetOnMap(data);
       })
       .catch(() => {
-        const container = document.getElementById("trajet-rapide");
-        container.querySelector(".trajet-summary").textContent = "Erreur lors du calcul";
-      });
-  }
-
-  // Charger et afficher trajet éco + affichage carte
-  function loadTrajetEco() {
-    // Remplace l'URL par celle correspondant au trajet éco si différente
-    fetch(`http://localhost/eco-path?from=${depart}&to=${arrivee}`)
-      .then(res => res.json())
-      .then(data => {
-        const container = document.getElementById("trajet-eco");
-        const summaryDiv = container.querySelector(".trajet-summary");
-        const detailsDiv = document.getElementById("details-eco");
-
-        if(data.error){
-          summaryDiv.textContent = "Erreur lors du calcul";
-          return;
-        }
-
-        const { totalMin, iconsHtml } = formatSummary(data);
-        summaryDiv.innerHTML = `${iconsHtml} Durée : <strong>${totalMin} min</strong>`;
-
-        detailsDiv.innerHTML = formatDetails(data);
-
-        if(container.getAttribute("aria-expanded") === "true"){
-          displayTrajetOnMap(data);
-        }
-      })
-      .catch(() => {
-        const container = document.getElementById("trajet-eco");
+        const container = document.getElementById(containerId);
         container.querySelector(".trajet-summary").textContent = "Erreur lors du calcul";
       });
   }
@@ -285,14 +261,14 @@
     const detailsDiv = container.querySelector(".trajet-details");
     const expanded = container.getAttribute("aria-expanded") === "true";
 
-    if(expanded){
+    if (expanded) {
       detailsDiv.style.display = "none";
       container.setAttribute("aria-expanded", "false");
       clearTrajet();
     } else {
-      // Fermer l'autre case
+      // Fermer les autres
       document.querySelectorAll('.trajet-case').forEach(el => {
-        if(el !== container){
+        if (el !== container) {
           el.querySelector(".trajet-details").style.display = "none";
           el.setAttribute("aria-expanded", "false");
         }
@@ -301,44 +277,41 @@
       detailsDiv.style.display = "block";
       container.setAttribute("aria-expanded", "true");
 
-      // Afficher le trajet correspondant sur la carte
-      if(container.id === "trajet-rapide") {
-        loadTrajetRapide();
-      } else if(container.id === "trajet-eco") {
-        loadTrajetEco();
+      // Charger et afficher trajet correspondant
+      if (container.id === "trajet-rapide") {
+        loadTrajet(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`, "trajet-rapide", true);
+      } else if (container.id === "trajet-eco") {
+        loadTrajet(`http://localhost/eco-path?from=${depart}&to=${arrivee}`, "trajet-eco", true);
       }
     }
   }
 
-  // Ajout écouteurs clic et clavier (accessibilité) sur les cases
-  document.getElementById("trajet-rapide").addEventListener("click", toggleDetails);
-  document.getElementById("trajet-rapide").addEventListener("keydown", e => {
-    if(e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      toggleDetails(e);
-    }
+  // Ajout écouteurs clic et clavier (accessibilité)
+  ["trajet-rapide", "trajet-eco"].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener("click", toggleDetails);
+    el.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleDetails(e);
+      }
+    });
   });
 
-  document.getElementById("trajet-eco").addEventListener("click", toggleDetails);
-  document.getElementById("trajet-eco").addEventListener("keydown", e => {
-    if(e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      toggleDetails(e);
-    }
+  // Initialisation principale : charger couleurs puis trajets sans afficher détails (donc pas afficher sur carte)
+  loadColorMap().then(() => {
+    loadTrajet(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`, "trajet-rapide", true);
+    loadTrajet(`http://localhost/eco-path?from=${depart}&to=${arrivee}`, "trajet-eco", false);
   });
 
-  // Initialisation
-  loadTrajetRapide();
-  loadTrajetEco();
-
-  // Au démarrage, on veut que les deux cases soient fermées (aria-expanded = false)
-  // et que les détails soient cachés
-  document.getElementById("trajet-rapide").setAttribute("aria-expanded", "false");
-  document.getElementById("trajet-rapide").querySelector(".trajet-details").style.display = "none";
-
-  document.getElementById("trajet-eco").setAttribute("aria-expanded", "false");
-  document.getElementById("trajet-eco").querySelector(".trajet-details").style.display = "none";
+  // Au démarrage, on veut que les deux cases soient fermées et détails cachés
+  ["trajet-rapide", "trajet-eco"].forEach(id => {
+    const el = document.getElementById(id);
+    el.setAttribute("aria-expanded", "false");
+    el.querySelector(".trajet-details").style.display = "none";
+  });
 </script>
+
 
 
 </body>

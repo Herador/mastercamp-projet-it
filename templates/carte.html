@@ -5,185 +5,148 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Carte Vertiligne</title>
 
-  <!-- On importe le style de la carte Leaflet pour l'affichage -->
+  <!-- Style Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-  <!-- On importe une jolie police d'écriture -->
+  <!-- Police personnalisée -->
   <link href="https://fonts.googleapis.com/css2?family=Klee+One&display=swap" rel="stylesheet" />
 
-  <!-- On ajoute notre propre style pour personnaliser l'apparence -->
+  <!-- Style maison -->
   <link rel="stylesheet" href="../static/styles.css" />
 </head>
 <body>
   <div class="container">
     
-    <!-- Bande bleue en haut avec le formulaire où on écrit le départ et l'arrivée -->
+    <!-- Bande bleue avec formulaire -->
     <div class="bottom-blue small" id="blue-box">
       <h1 class="logo">Vertiligne</h1>
       <div class="form-box" id="form-box">
-        
-        <!-- Titre du formulaire -->
         <p class="form-title">On va où ?</p>
-
-        <!-- Champs où l'utilisateur écrit la station de départ -->
         <input type="text" id="depart" placeholder="Départ" autocomplete="off" />
-
-        <!-- Champs où l'utilisateur écrit la station d'arrivée -->
         <input type="text" id="arrivee" placeholder="Arrivée" autocomplete="off" />
-
-        <!-- Ici apparaîtront les propositions automatiques pour aider à remplir les champs -->
         <div class="suggestions" id="suggestions"></div>
       </div>
-
-      <!-- Bouton pour lancer la recherche du trajet -->
       <a href="/trajet" id="search-btn" class="search-button">Recherche</a>
     </div>
 
-    <!-- Ici on place la carte qui va afficher le plan du métro -->
+    <!-- Carte Leaflet -->
     <div id="map"></div>
   </div>
 
-  <!-- On importe le script Leaflet, la bibliothèque qui permet d’afficher la carte -->
+  <!-- Script Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    let stations = []; // Liste vide où on va stocker les noms des stations
+    let stations = [];
+    const stopNames = [];
 
-    // On crée la carte centrée sur Paris (latitude 48.857, longitude 2.35) avec un zoom de 13
+    // Création de la carte centrée sur Paris
     const map = L.map('map').setView([48.857, 2.35], 13);
 
-    // On ajoute la couche de fond de carte avec les tuiles CartoDB
+    // Fond de carte
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
       maxZoom: 18
     }).addTo(map);
 
-  
-
-    const stopNames = []; // Liste des noms de toutes les stations
-
-    // On va chercher la liste des stations disponibles via une requête au serveur local
+    // Récupération des stations
     fetch('http://localhost/stops')
-      .then(response => response.json()) // On récupère la réponse au format JSON
+      .then(response => response.json())
       .then(data => {
-        // On récupère uniquement les noms des stations pour les suggestions
         stations = data.map(stop => stop.name).filter(Boolean);
-
-        // Pour chaque station, on ajoute une icône sur la carte
         data.forEach(stop => {
+          if (stop.type === "transfer") return;  // Ignore cet arrêt
+          
           stopNames.push(stop.name);
-<<<<<<< HEAD
-          if (stop.lat && stop.lon) {
-            // Déterminer le niveau de pollution (par défaut à 1 si non défini)
-            const pollutionLevel = Math.max(0, Math.min(3, stop.pollution)); // sécurité : garde les valeurs entre 0 et 3
 
-            // Créer une icône personnalisée basée sur le niveau de pollution
+          if (stop.lat && stop.lon) {
+            const pollutionLevel = Math.max(0, Math.min(3, stop.pollution));
+
             const pollutionIcon = L.icon({
-              iconUrl: `../static/P${pollutionLevel}.png`, // Exemple : ../static/P2.png
-              iconSize: [25, 25],       // Ajuste la taille selon tes images
+              iconUrl: `../static/P${pollutionLevel}.png`,
+              iconSize: [25, 25],
               iconAnchor: [16, 16],
               popupAnchor: [0, -16]
             });
 
-  // Ajouter le marqueur à la carte avec l’icône dynamique
-  L.marker([stop.lat, stop.lon], { icon: pollutionIcon })
-    .addTo(map)
-    .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}<br>Pollution: ${stop.pollution}`);
-}
-
-          if (stop.lat && stop.lon) { // si la station a des coordonnées GPS
-            L.marker([stop.lat, stop.lon], { icon: metroIcon }) // on crée un marqueur
-              .addTo(map) // on l’ajoute à la carte
-              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}<br>Pollution: ${stop.pollution}<br>Accessible: ${stop.accessible ? 'Oui' : 'Non'}`); // popup affiché au clic sur la station
+            L.marker([stop.lat, stop.lon], { icon: pollutionIcon })
+              .addTo(map)
+              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}<br>Pollution: ${stop.pollution}<br>Accessible: ${stop.accessible ? 'Oui' : 'Non'}`);
           }
->>>>>>> ff660ac5d83653336f86946dc8243b654bb86c97
         });
       })
-      .catch(error => console.error('Erreur de chargement des arrêts:', error)); // message si ça plante
+      .catch(error => console.error('Erreur de chargement des arrêts:', error));
 
-    // On récupère les éléments du formulaire dans des variables pour les manipuler plus facilement
+    // Gestion du formulaire
     const departInput = document.getElementById("depart");
     const arriveeInput = document.getElementById("arrivee");
     const suggestionsBox = document.getElementById("suggestions");
     const searchBtn = document.getElementById("search-btn");
 
-    let currentInput = null; // Pour savoir dans quel champ on est en train d’écrire
+    let currentInput = null;
 
-    // Fonction qui affiche des propositions en dessous du champ quand on écrit
     function showSuggestions(input) {
-      const query = input.value.toLowerCase(); // On met la recherche en minuscules
-      // On filtre les stations qui commencent par ce qu’on tape
+      const query = input.value.toLowerCase();
       const results = stopNames.filter(station => station.toLowerCase().startsWith(query));
-      suggestionsBox.innerHTML = ""; // On vide les anciennes suggestions
+      suggestionsBox.innerHTML = "";
 
-      // Pour chaque résultat, on crée un petit bouton cliquable dans la liste
       results.forEach(station => {
         const div = document.createElement("div");
         div.className = "suggestion-item";
         div.textContent = station;
-        // Si on clique sur une suggestion, ça remplit le champ automatiquement
         div.onclick = () => {
           input.value = station;
-          suggestionsBox.innerHTML = ""; // On cache les suggestions
-          checkInputs(); // On vérifie si on peut activer le bouton recherche
+          suggestionsBox.innerHTML = "";
+          checkInputs();
         };
-        suggestionsBox.appendChild(div); // On ajoute la suggestion à la liste visible
+        suggestionsBox.appendChild(div);
       });
     }
 
-    // Fonction qui vérifie si les deux champs sont remplis, pour afficher ou cacher le bouton "Recherche"
     function checkInputs() {
       if (departInput.value.trim() && arriveeInput.value.trim()) {
-        searchBtn.style.display = "block"; // Affiche le bouton si départ et arrivée sont remplis
+        searchBtn.style.display = "block";
       } else {
-        searchBtn.style.display = "none"; // Sinon, on cache le bouton
+        searchBtn.style.display = "none";
       }
     }
 
-    // Quand on clique dans le champ départ, on prépare les suggestions pour ce champ
     departInput.addEventListener("focus", () => {
       currentInput = departInput;
       showSuggestions(departInput);
     });
 
-    // Quand on clique dans le champ arrivée, on prépare les suggestions pour ce champ
     arriveeInput.addEventListener("focus", () => {
       currentInput = arriveeInput;
       showSuggestions(arriveeInput);
     });
 
-    // Quand on tape quelque chose dans départ, on affiche les suggestions correspondantes
     departInput.addEventListener("input", () => {
       if (currentInput === departInput) showSuggestions(departInput);
       checkInputs();
     });
 
-    // Quand on tape quelque chose dans arrivée, on affiche les suggestions correspondantes
     arriveeInput.addEventListener("input", () => {
       if (currentInput === arriveeInput) showSuggestions(arriveeInput);
       checkInputs();
     });
 
-    // Si on clique en dehors du formulaire, on cache la liste des suggestions
     document.addEventListener("click", (e) => {
       if (!e.target.closest("#form-box")) {
         suggestionsBox.innerHTML = "";
       }
     });
 
-    // Quand on clique sur le bouton "Recherche"
     searchBtn.addEventListener("click", () => {
-      // On sauvegarde les valeurs des champs dans le stockage local du navigateur
       localStorage.setItem("depart", departInput.value);
       localStorage.setItem("arrivee", arriveeInput.value);
     });
 
-    // On récupère aussi les lignes de métro depuis le serveur, pour les afficher en couleur sur la carte
+    // Affichage des lignes de métro
     fetch("http://localhost/api/lines")
       .then(response => response.json())
       .then(lines => {
-        // Pour chaque ligne reçue, on trace une ligne colorée sur la carte
         lines.forEach(line => {
           const polyline = L.polyline(line.coordinates, {
             color: line.color,
@@ -191,41 +154,36 @@
             opacity: 1,
             lineJoin: 'round',
           }).addTo(map);
-
-          // On ajoute un popup qui affiche le nom de la ligne quand on clique dessus
           polyline.bindPopup(line.name);
         });
       })
       .catch(error => console.error("Erreur lors du chargement des lignes :", error));
 
+    // Légende pollution
+    const legend = L.control({ position: 'topright' });
 
-      // Création de la légende avec les images des niveaux de pollution
-const legend = L.control({position: 'topright'});
+    legend.onAdd = function () {
+      const div = L.DomUtil.create('div', 'info legend');
+      const levels = [
+        { label: "Faible pollution", icon: "../static/P0.png" },
+        { label: "Pollution moyenne", icon: "../static/P1.png" },
+        { label: "Pollution élevée", icon: "../static/P2.png" },
+        { label: "Pollution très élevée", icon: "../static/P3.png" },
+      ];
 
-legend.onAdd = function (map) {
-  const div = L.DomUtil.create('div', 'info legend');
-  const levels = [
-    {label: "Faible pollution", icon: "../static/P0.png"},
-    {label: "Pollution moyenne", icon: "../static/P1.png"},
-    {label: "Pollution élevée", icon: "../static/P2.png"},
-    {label: "Pollution très élevée", icon: "../static/P3.png"},
-  ];
+      div.innerHTML += "<h4>Niveau de pollution</h4>";
+      levels.forEach(level => {
+        div.innerHTML += `
+          <div style="display:flex; align-items:center; margin-bottom:4px;">
+            <img src="${level.icon}" style="width:20px; height:20px; margin-right:6px;">
+            <span>${level.label}</span>
+          </div>`;
+      });
 
-  div.innerHTML += "<h4>Niveau de pollution</h4>";
+      return div;
+    };
 
-  levels.forEach(level => {
-    div.innerHTML +=
-      `<div style="display:flex; align-items:center; margin-bottom:4px;">
-        <img src="${level.icon}" style="width:20px; height:20px; margin-right:6px;">
-        <span>${level.label}</span>
-      </div>`;
-  });
-
-  return div;
-};
-
-legend.addTo(map);
-
+    legend.addTo(map);
   </script>
 </body>
 </html>

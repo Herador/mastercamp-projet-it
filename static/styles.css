@@ -2,8 +2,6 @@
    IMPORT DE LA POLICE GOOGLE FONTS
    ============================================ */
 @import url('https://fonts.googleapis.com/css2?family=Klee+One&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Homemade+Apple&display=swap');
-
 
 /* ============================================
    STYLES GÉNÉRAUX DU BODY
@@ -12,8 +10,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Klee One', cursive;
-  background-color: #2772a8;
-  color: #fff;
+  background-color: #0078c8; /* Bleu principal de fond */
 }
 
 /* ============================================
@@ -22,28 +19,31 @@ body {
 .container_accueil {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 90vh;
+  align-items: center;       /* Centrer horizontalement */
+  justify-content: center;   /* Centrer verticalement */
+  height: 90vh;             /* Hauteur pleine page */
   text-align: center;
+  color: white;              /* Texte blanc */
 }
 
 /* Image du train sur la page d'accueil */
 .train-image {
   max-width: 150px;
+
+
 }
 
 /* Texte de bienvenue */
 .welcome {
   font-size: 24px;
-  margin: 0px 30px 50px 30px;
+    margin: 0px 30px 50px 30px;
   line-height: 1.5;
 }
 
 /* Bouton "Démarrer" sur la page d'accueil */
 .start-button {
-  background-color: #509cc8;
-  color: #fff;
+  background-color: white;
+  color: #0078c8;
   border: none;
   padding: 10px 20px;
   font-size: 24px;
@@ -53,7 +53,7 @@ body {
 }
 
 .start-button:hover {
-  background-color: #82a4cb;
+  background-color: #e0e0e0;
 }
 
 /* ============================================
@@ -61,16 +61,16 @@ body {
    ============================================ */
 .container {
   display: flex;
-  flex-direction: row;
-  height: 100vh;
+  flex-direction: row; /* Organisation en ligne : carte + panneau */
+  height: 100vh;       /* Hauteur pleine page */
 }
 
 /* ============================================
    CARTE LEAFLET
    ============================================ */
 #map {
-  flex: 1;
-  height: 100%;
+  flex: 1;       /* Prend tout l'espace restant */
+  height: 100%;  /* Hauteur pleine */
 }
 
 /* ============================================
@@ -78,22 +78,22 @@ body {
    ============================================ */
 .bottom-blue {
   width: 300px;
-  background-color: #2772a8;
+  background-color: #0078c8;
   padding: 40px 30px;
   flex-direction: column;
   align-items: center;
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Ombre plus visible */
-  border-radius: 12px; /* Pour des coins arrondis */
+  color: white;
+  font-family: 'Klee One', cursive;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1); /* Ombre portée à gauche */
 }
 
-
+/* Modificateurs pour le panneau */
 .bottom-blue.small {
-  justify-content: center;
+  justify-content: center;  /* Centrer verticalement */
 }
 
 .bottom-blue.large {
-  justify-content: flex-start;
+  justify-content: flex-start; /* Aligner en haut */
 }
 
 /* ============================================
@@ -108,26 +108,22 @@ body {
    FORMULAIRE - CONTENEUR INPUTS
    ============================================ */
 .form-box {
-  background-color: #fff;
+  background-color: white;
   border-radius: 12px;
   padding: 0px 10px;
   width: 100%;
   box-sizing: border-box;
-  color: #000;
+  color: black;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 15px; /* Espacement vertical entre inputs */
 }
 
 .form-box input {
-  border: 1px solid #9c9c9c;
+  border: 1px solid #ccc;
   border-radius: 8px;
   padding: 10px;
   font-family: 'Klee One', cursive;
-}
-
-.form-box input:focus {
-  border-color: #509cc8;
 }
 
 /* ============================================
@@ -138,7 +134,7 @@ body {
   flex-direction: column;
   gap: 8px;
   max-height: 150px;
-  overflow-y: auto;
+  overflow-y: auto; /* Scroll si trop de suggestions */
 }
 
 .suggestion-item {
@@ -150,7 +146,7 @@ body {
 }
 
 .suggestion-item:hover {
-  background-color: #e5ecf4;
+  background-color: #ddd;
 }
 
 /* ============================================
@@ -158,8 +154,8 @@ body {
    ============================================ */
 .search-button {
   margin-top: 20px;
-  background-color: #509cc8;
-  color: #fff;
+  background-color: #085A8C;
+  color: white;
   border: none;
   padding: 10px 110px;
   font-size: 16px;
@@ -167,22 +163,21 @@ body {
   cursor: pointer;
   transition: background-color 0.3s;
   text-decoration: none;
-  display: none;
+  display: none; /* Caché par défaut */
 }
 
 .search-button:hover {
-  background-color: #82a4cb;
+  background-color: #0b4264;
 }
 
 /* ============================================
    LOGO PRINCIPAL
    ============================================ */
 .logo {
-  color: #fff;
-  font-size: 56px;
+  color: white;
+  font-size: 72px;
   margin: 0 0 40px 0;
   text-align: center;
-  font-family: 'Homemade Apple', cursive;
 }
 
 /* ============================================
@@ -195,15 +190,12 @@ body {
 }
 
 .info-content {
-  background-color: #fff;
-  color: #2772a8;
+  background-color: white;
+  color: #0078c8;
   border-radius: 8px;
   font-size: 16px;
 }
 
-/* ============================================
-   TITRES GÉNÉRAUX
-   ============================================ */
 .title {
   font-size: 24px;
   margin: 0px;
@@ -227,16 +219,12 @@ body {
   padding: 8px 14px;
   font-weight: bold;
   cursor: pointer;
-  background-color: #7488b7;
-  color: #fff;
+  background-color: #243c5a;
+  color: white;
   border: none;
   border-radius: 6px;
   float: right;
   font-size: 14px;
-}
-
-.detail-button:hover {
-  background-color: #509cc8;
 }
 
 /* ============================================
@@ -264,8 +252,8 @@ body {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: var(--line-color, #2772a8);
-  color: #fff;
+  background-color: var(--line-color, #999);
+  color: white;
   font-weight: bold;
   font-size: 14px;
   display: flex;
@@ -277,7 +265,7 @@ body {
 /* Barre verticale représentant la ligne */
 .line-bar {
   width: 4px;
-  background-color: var(--line-color, #2772a8);
+  background-color: var(--line-color, #999);
   flex-grow: 0;
   flex-shrink: 0;
   margin-top: 4px;
@@ -295,7 +283,7 @@ body {
   font-size: 16px;
   position: relative;
   padding-left: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 10px; /* espace entre stations */
 }
 
 /* Pastille circulaire devant chaque station */
@@ -306,7 +294,7 @@ body {
   top: 7px;
   width: 8px;
   height: 8px;
-  background-color: var(--line-color, #2772a8);
+  background-color: var(--line-color, #999);
   border-radius: 50%;
 }
 
@@ -317,8 +305,8 @@ body {
 
 /* Gestion de l'espacement réduit entre stations collées */
 .station.coller {
-  margin-bottom: 0;
-  padding-bottom: 2px;
+  margin-bottom: 0;    /* Pas d'espace entre stations collées */
+  padding-bottom: 2px; /* Petit padding pour visibilité */
 }
 
 /* ============================================
@@ -336,8 +324,7 @@ body {
 .station-item {
   display: flex;
   align-items: center;
-  background-color: #509cc8;
-  color: #fff;
+  background: #f0f0f0;
   margin: 20px 0;
   padding: 8px 12px;
   border-radius: 8px;
@@ -355,115 +342,4 @@ body {
 .emissions-evite {
   font-style: italic;
   color: green;
-}
-
-
-
-.info.legend {
-  background: white;
-  color: #000000;
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Ombre plus visible */
-  font-size: 16px;
-}
-
-
-    /* Ajout pour les cases côte à côte */
-    .trajet-cases {
-      display: block;
-      flex-direction: column;
-      gap: 15px;
-      margin-top: 10px;
-
-    }
-    .trajet-case {
-      background-color: #fff;
-      color: #2772a8;
-      border-radius: 8px;
-      padding: 15px;
-      flex: 1;
-      cursor: pointer;
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-      position: relative;
-      margin-bottom: 10px;
-    }
-    .trajet-case:hover {
-      background-color: #e6f0fa;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    .trajet-summary {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-    }
-    .trajet-summary img.metro-icon {
-      height: 25px;
-      margin: -5px;
-    }
-    .trajet-details {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #0b3d91;
-      display: none;
-    }
-
-    .trajet-title {
-  font-weight: bold;
-  font-size: 18px;
-  margin-bottom: 8px;
-  color: #000000;
-}
-
-
-
-
-.timeline {
-  margin-left: 20px;
-  padding-left: 15px;
-}
-
-.segment {
-  position: relative;
-  padding-left: 30px;
-  margin-bottom: 30px;
-  border-left: 3px solid;
-}
-
-.station-icon {
-  position: relative;
-  margin-bottom: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.station-icon img {
-  width: 35px;
-  height: 35px;
-  display: block;
-  margin-bottom: 5px;
-}
-
-.station-name {
-  font-weight: bold;
-  text-align: center;
-}
-
-.arrets-intermediaires {
-  list-style: none;
-  padding-left: 15px;
-  margin: 0;
-  border-left: 1px dashed #999;
-}
-
-.arrets-intermediaires li {
-  margin: 6px 0;
-  padding-left: 8px;
-  position: relative;
-}
-.co2-emissions {
-  margin-top: 20px;
-  font-size: 0.9em;
 }
