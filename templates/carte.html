@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Carte Metro EFREI Dodo</title>
+  <title>Carte Vertiligne</title>
 
   <!-- On importe le style de la carte Leaflet pour l'affichage -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -19,7 +19,7 @@
     
     <!-- Bande bleue en haut avec le formulaire où on écrit le départ et l'arrivée -->
     <div class="bottom-blue small" id="blue-box">
-      <h1 class="logo">MED</h1>
+      <h1 class="logo">Vertiligne</h1>
       <div class="form-box" id="form-box">
         
         <!-- Titre du formulaire -->
@@ -59,13 +59,7 @@
       maxZoom: 18
     }).addTo(map);
 
-    // On crée une petite icône personnalisée pour les stations de métro
-    const metroIcon = L.icon({
-      iconUrl: '../static/logo_metro.png', // chemin vers l’image de l’icône
-      iconSize: [20, 15], // taille de l’icône
-      iconAnchor: [16, 16], // point d’ancrage de l’icône
-      popupAnchor: [0, -16] // position du popup par rapport à l’icône
-    });
+  
 
     const stopNames = []; // Liste des noms de toutes les stations
 
@@ -79,11 +73,24 @@
         // Pour chaque station, on ajoute une icône sur la carte
         data.forEach(stop => {
           stopNames.push(stop.name);
-          if (stop.lat && stop.lon) { // si la station a des coordonnées GPS
-            L.marker([stop.lat, stop.lon], { icon: metroIcon }) // on crée un marqueur
-              .addTo(map) // on l’ajoute à la carte
-              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}<br>Pollution: ${stop.pollution}`); // popup affiché au clic sur la station
-          }
+          if (stop.lat && stop.lon) {
+            // Déterminer le niveau de pollution (par défaut à 1 si non défini)
+            const pollutionLevel = Math.max(0, Math.min(3, stop.pollution)); // sécurité : garde les valeurs entre 0 et 3
+
+            // Créer une icône personnalisée basée sur le niveau de pollution
+            const pollutionIcon = L.icon({
+              iconUrl: `../static/P${pollutionLevel}.png`, // Exemple : ../static/P2.png
+              iconSize: [25, 25],       // Ajuste la taille selon tes images
+              iconAnchor: [16, 16],
+              popupAnchor: [0, -16]
+            });
+
+  // Ajouter le marqueur à la carte avec l’icône dynamique
+  L.marker([stop.lat, stop.lon], { icon: pollutionIcon })
+    .addTo(map)
+    .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}<br>Pollution: ${stop.pollution}`);
+}
+
         });
       })
       .catch(error => console.error('Erreur de chargement des arrêts:', error)); // message si ça plante
@@ -183,6 +190,35 @@
         });
       })
       .catch(error => console.error("Erreur lors du chargement des lignes :", error));
+
+
+      // Création de la légende avec les images des niveaux de pollution
+const legend = L.control({position: 'topright'});
+
+legend.onAdd = function (map) {
+  const div = L.DomUtil.create('div', 'info legend');
+  const levels = [
+    {label: "Faible pollution", icon: "../static/P0.png"},
+    {label: "Pollution moyenne", icon: "../static/P1.png"},
+    {label: "Pollution élevée", icon: "../static/P2.png"},
+    {label: "Pollution très élevée", icon: "../static/P3.png"},
+  ];
+
+  div.innerHTML += "<h4>Niveau de pollution</h4>";
+
+  levels.forEach(level => {
+    div.innerHTML +=
+      `<div style="display:flex; align-items:center; margin-bottom:4px;">
+        <img src="${level.icon}" style="width:20px; height:20px; margin-right:6px;">
+        <span>${level.label}</span>
+      </div>`;
+  });
+
+  return div;
+};
+
+legend.addTo(map);
+
   </script>
 </body>
 </html>
