@@ -12,6 +12,7 @@ routes = pd.read_csv('IDFM-gtfs/routes.txt')
 trips = pd.read_csv('IDFM-gtfs/trips.txt')
 stop_times = pd.read_csv('IDFM-gtfs/stop_times.txt')
 stops = pd.read_csv('IDFM-gtfs/stops.txt')
+transfers = pd.read_csv('IDFM-gtfs/transfers.txt')
 
 trips = trips.merge(routes[['route_id', 'route_short_name']], on='route_id', how='left')
 
@@ -38,9 +39,12 @@ stop_dict = {}
 
 for row in physical_stops.itertuples(index=False):
     name = parent_dict.get(row.parent_station, row.stop_name)
-    key = row.parent_station if pd.notna(row.parent_station) else row.stop_id
-    if key not in stop_dict:
-        stop_dict[row.stop_id] = Stop(key, name, row.stop_lat, row.stop_lon)
+    accessible = True if row.wheelchair_boarding == 1 else False
+    
+    stop = Stop(row.stop_id, name, row.stop_lat, row.stop_lon, accessible)
+    stop.parent_station = row.parent_station
+    stop_dict[row.stop_id] = stop
+    
 
 stop_times = stop_times.merge(physical_stops[['stop_id', 'stop_name', 'stop_lat', 'stop_lon']], on='stop_id', how='left')
 stop_times = stop_times.sort_values(['trip_id', 'stop_sequence'])
@@ -67,6 +71,47 @@ for row in edges.itertuples(index=False):
             graph[v][u] = {"duration": w, "routes": set([route])}
         else:
             graph[v][u]["routes"].add(route)
+
+transfers = transfers[transfers["transfer_type"] == 2]
+
+for _, row in transfers.iterrows():
+    from_stop = stop_dict.get(row["from_stop_id"])
+    to_stop = stop_dict.get(row["to_stop_id"])
+    duration = int(row["min_transfer_time"])
+
+    if from_stop and to_stop and from_stop != to_stop:
+        # Un seul sens (ou tu peux ajouter l'autre aussi)
+        if to_stop not in graph[from_stop] or graph[from_stop][to_stop]["duration"] > duration:
+            graph[from_stop][to_stop] = {"duration": duration, "routes": set(["transfer"])}
+
+# Ajout des correspondances au DataFrame edges
+transfer_rows = []
+
+for _, row in transfers.iterrows():
+    from_stop = stop_dict.get(row["from_stop_id"])
+    to_stop = stop_dict.get(row["to_stop_id"])
+    duration = int(row["min_transfer_time"])
+
+    if from_stop and to_stop and from_stop != to_stop:
+        # Graphe visuel (optionnel, pour debug)
+        if to_stop not in graph[from_stop] or graph[from_stop][to_stop]["duration"] > duration:
+            graph[from_stop][to_stop] = {"duration": duration, "routes": set(["transfer"])}
+
+        # Graphe réel utilisé par MetroGraph
+        transfer_rows.append({
+            "stop_id": from_stop.id,
+            "next_stop_id": to_stop.id,
+            "duration": duration,
+            "u": from_stop,
+            "v": to_stop,
+            "route_short_name": "transfer"
+        })
+
+# Fusion avec edges
+if transfer_rows:
+    transfers_df = pd.DataFrame(transfer_rows)
+    edges = pd.concat([edges, transfers_df], ignore_index=True)
+
 
 # Création du MetroGraph
 g = MetroGraph(stop_dict, edges)

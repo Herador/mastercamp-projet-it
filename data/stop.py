@@ -1,10 +1,11 @@
 class Stop:
-    def __init__(self, stop_id, name, lat, lon):
+    def __init__(self, stop_id, name, lat, lon, accessible=False):
         self.id = stop_id
         self.name = name
         self.lat = float(lat)
         self.lon = float(lon)
         self.pollution = None
+        self.accessible = accessible
 
     def __eq__(self, other):
         return isinstance(other, Stop) and self.id == other.id
@@ -25,6 +26,7 @@ class Stop:
             "name": self.name,
             "lat": self.lat,
             "lon": self.lon,
-            "pollution": self.pollution
+            "pollution": self.pollution,
+            "accessible": self.accessible
         }
 
