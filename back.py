@@ -2,10 +2,10 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import pickle
 from flask_cors import CORS
-from flask import render_template
+from graph.kruskal import kruskal
 from graph.dijkstra import dijkstra, reconstruire_chemin, yen_k_shortest_paths
 
 def calculer_poids_ecologique(chemin, graphe_obj):
@@ -157,6 +157,42 @@ def get_neighbors(stop_id):
 
     return jsonify(results)
 
+@app.route("/est-connexe")
+def test_connexite():
+    connected, visited = metroGraph.is_connected()
+    return jsonify({ 
+        "connected": connected,
+        "visited_count": len(visited),
+        "total_stops": len(metroGraph.graph),
+        "unvisited_ids": [
+            stop.id for stop in metroGraph.graph
+            if stop not in visited
+        ] if not connected else []
+    })
+
+@app.route("/apcm")
+def afficher_apcm():
+    arbre = kruskal(metroGraph.graph)
+
+    apcm_geojson = []
+    for s1, s2, poids in arbre:
+        apcm_geojson.append({
+            "from": {
+                "id": s1.id,
+                "name": s1.name,
+                "lat": s1.lat,
+                "lon": s1.lon,
+            },
+            "to": {
+                "id": s2.id,
+                "name": s2.name,
+                "lat": s2.lat,
+                "lon": s2.lon,
+            },
+            "duration": poids
+        })
+
+    return jsonify(apcm_geojson)
 
 @app.route("/shortest-path")
 def get_shortest_path():
