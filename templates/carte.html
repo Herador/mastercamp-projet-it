@@ -26,24 +26,19 @@
         <input type="text" id="arrivee" placeholder="Arrivée" autocomplete="off" />
         <div class="suggestions" id="suggestions"></div>
       </div>
-      <a href="/trajet" id="search-btn" class="search-button">Recherche</a>
+      <a href="/trajet" id="search-btn" class="search-button" style="display:none;">Recherche</a>
       <div>
         <button id="check-connectivity-btn" class="action-button">Vérifier la connexité</button>
         <div id="connectivity-result" style="margin: 10px; font-weight: bold;"></div>
 
+        <button id="show-acpm-btn" class="action-button">Afficher l'ACPM</button>
 
-        <button id="show-acpm-btn" class="action-button">
-          Afficher propagation ACPM
-        </button>
-
-
-        <!--
-        <button id="show-acpm-btn" class="action-button">Afficher propagation ACPM</button>
-        <div id="acpm-container" style="display:none; margin-top: 10px; height: 200px; background: #fff; border-radius: 8px; overflow: hidden;"></div>
-      --></div>
+        <!-- Conteneur de la carte ACPM, caché par défaut -->
+        <div id="acpm-container" style="display:none; margin-top: 10px; height: 400px; background: #fff; border-radius: 8px; overflow: hidden;"></div>
+      </div>
     </div>
 
-    <!-- Carte Leaflet -->
+    <!-- Carte Leaflet principale -->
     <div id="map"></div>
   </div>
 
@@ -64,13 +59,13 @@
       maxZoom: 18
     }).addTo(map);
 
-    // Récupération des stations
+    // Récupération des stations pour suggestions et affichage sur la carte principale
     fetch('http://localhost/stops')
       .then(response => response.json())
       .then(data => {
         stations = data.map(stop => stop.name).filter(Boolean);
         data.forEach(stop => {
-          if (stop.type === "transfer") return;  // Ignore cet arrêt
+          if (stop.type === "transfer") return;
           
           stopNames.push(stop.name);
 
@@ -92,7 +87,7 @@
       })
       .catch(error => console.error('Erreur de chargement des arrêts:', error));
 
-    // Gestion du formulaire
+    // Gestion du formulaire et suggestions
     const departInput = document.getElementById("depart");
     const arriveeInput = document.getElementById("arrivee");
     const suggestionsBox = document.getElementById("suggestions");
@@ -157,15 +152,15 @@
       localStorage.setItem("arrivee", arriveeInput.value);
     });
 
-    // Affichage des lignes de métro
+    // Affichage des lignes de métro sur la carte principale
     fetch("http://localhost/api/lines")
       .then(response => response.json())
       .then(lines => {
         lines.forEach(line => {
           const polyline = L.polyline(line.coordinates, {
             color: line.color,
-            weight: 5,
-            opacity: 1,
+            weight: 10,
+            opacity: 0.8,
             lineJoin: 'round',
           }).addTo(map);
           polyline.bindPopup(line.name);
@@ -199,15 +194,11 @@
 
     legend.addTo(map);
 
-
-
-
-
+    // Vérification de la connexité
     const connectivityBtn = document.getElementById("check-connectivity-btn");
     const connectivityResult = document.getElementById("connectivity-result");
 
     connectivityBtn.addEventListener("click", () => {
-      // Si le message est déjà visible, on le cache et on arrête là
       if (connectivityResult.textContent) {
         connectivityResult.textContent = "";
         connectivityResult.className = "";
@@ -235,20 +226,51 @@
         });
     });
 
+    // --- Gestion affichage carte ACPM dans la barre bleue ---
 
-    
-const showAcpmbtn = document.getElementById('show-acpm-btn');
+    const showAcpmbtn = document.getElementById("show-acpm-btn");
+    const acpmContainer = document.getElementById("acpm-container");
+    let acpmMap = null;
 
-showAcpmbtn.addEventListener('click', () => {
-  // On sauvegarde les valeurs des inputs dans localStorage
-  localStorage.setItem("depart", departInput.value);
-  localStorage.setItem("arrivee", arriveeInput.value);
+    showAcpmbtn.addEventListener("click", () => {
+      if (acpmContainer.style.display === "none") {
+        acpmContainer.style.display = "block";
 
-  // Puis on redirige vers la page acpm
-  window.location.href = '/acpm-carte';
-});
+        if (!acpmMap) {
+          acpmMap = L.map('acpm-container').setView([48.857, 2.35], 13);
 
-    
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 11
+          }).addTo(acpmMap);
+
+        
+          
+
+          // Affichage des lignes ACPM
+          fetch('/api/linesapcm')
+            .then(res => res.json())
+            .then(segments => {
+              segments.forEach(segment => {
+                const coords = segment.coordinates;
+                const color = segment.color || '#000';
+
+                L.polyline(coords, {
+                  color: color,
+                  weight: 4,
+                  opacity: 0.8
+                }).addTo(acpmMap)
+                  .bindPopup(segment.name);
+              });
+            })
+            .catch(err => console.error("Erreur chargement ACPM :", err));
+        }
+      } else {
+        acpmContainer.style.display = "none";
+      }
+    });
+
   </script>
 </body>
 </html>

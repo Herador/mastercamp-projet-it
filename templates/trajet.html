@@ -53,6 +53,8 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
   maxZoom: 18
 }).addTo(map);
 
+
+
 const depart = localStorage.getItem("depart") || "Non défini";
 const arrivee = localStorage.getItem("arrivee") || "Non défini";
 
@@ -111,21 +113,12 @@ function displayTrajetOnMap(data) {
       trajetMarkers.push(markerFrom);
     }
 
-    if (step.to.lat && step.to.lon) {
-      const pollutionLevelTo = Math.max(0, Math.min(3, step.to.pollution ?? 1));
-      const pollutionIconTo = L.icon({
-        iconUrl: `../static/P${pollutionLevelTo}.png`,
-        iconSize: [25, 25],
-        iconAnchor: [16, 16],
-        popupAnchor: [0, -16]
-      });
-      const markerTo = L.marker([step.to.lat, step.to.lon], { icon: pollutionIconTo }).addTo(map);
-      markerTo.bindPopup(`${step.to.name}`);
-      trajetMarkers.push(markerTo);
-    }
+
 
     const color = colorMap[lineName] || "#000000";
-    const polyline = L.polyline([[step.from.lat, step.from.lon], [step.to.lat, step.to.lon]], { color }).addTo(map);
+    const polyline = L.polyline([[step.from.lat, step.from.lon], [step.to.lat, step.to.lon]], { color: color,
+      weight: 10,
+      opacity: 0.8,}).addTo(map);
     trajetLayers.push(polyline);
   });
 

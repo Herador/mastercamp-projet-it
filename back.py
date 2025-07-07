@@ -62,6 +62,11 @@ def show_carte():
 def show_trajet():
     return render_template("trajet.html")
 
+@app.route("/acpm")
+def page_acpm():
+    return render_template("acpm.html")
+
+
 # Ne renvoie que les stops commerciaux (pas physiques)
 @app.route("/stops")
 def get_simplified_stops():
