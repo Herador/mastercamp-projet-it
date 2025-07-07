@@ -176,6 +176,8 @@ def afficher_apcm():
 
     apcm_geojson = []
     for s1, s2, poids in arbre:
+        infos = metroGraph.graph[s1].get(s2) or metroGraph.graph[s2].get(s1)
+        lignes = sorted(infos["routes"]) if infos else []
         apcm_geojson.append({
             "from": {
                 "id": s1.id,
@@ -189,6 +191,7 @@ def afficher_apcm():
                 "lat": s2.lat,
                 "lon": s2.lon,
             },
+            "routes": lignes,
             "duration": poids
         })
 
