@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Carte ACPM - Trajet sélectionné</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map {
+      height: 95vh;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center">Carte ACPM et trajet sélectionné</h2>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([48.8566, 2.3522], 13);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 18
+    }).addTo(map);
+
+    const pollutionIcon = L.icon({
+      iconUrl: '../static/logo_metro.png',
+      iconSize: [20, 15],
+      iconAnchor: [12, 24],
+      popupAnchor: [0, -24]
+    });
+
+    // Récupération des stations départ et arrivée dans localStorage
+    const depart = localStorage.getItem('depart');
+    const arrivee = localStorage.getItem('arrivee');
+    console.log("Départ :", depart);
+    console.log("Arrivée :", arrivee);
+
+    if (!depart || !arrivee) {
+      alert("Stations départ et arrivée non définies. Merci de revenir à la page précédente.");
+    }
+
+    // Affichage des stations métro
+    fetch('/stops')
+      .then(res => res.json())
+      .then(stations => {
+        stations.forEach(stop => {
+          if (stop.type === "transfer") return; // Ignore si besoin
+
+          if (stop.lat && stop.lon) {
+            L.marker([stop.lat, stop.lon], { icon: pollutionIcon })
+              .addTo(map)
+              .bindPopup(`<strong>${stop.name}</strong><br>ID: ${stop.id}`);
+          }
+        });
+      })
+      .catch(err => console.error("Erreur chargement stations:", err));
+
+    // Affichage ACPM (en vert)
+    fetch('/apcm')
+      .then(res => res.json())
+      .then(apcmSegments => {
+        apcmSegments.forEach(segment => {
+          const from = [segment.from.lat, segment.from.lon];
+          const to = [segment.to.lat, segment.to.lon];
+          L.polyline([from, to], {
+            color: 'green',
+            weight: 4,
+            opacity: 0.7
+          }).addTo(map)
+            .bindPopup(`De ${segment.from.name} à ${segment.to.name} (${segment.duration} s)`);
+        });
+      })
+      .catch(err => console.error("Erreur chargement ACPM:", err));
+
+  
+  </script>
+</body>
+</html>

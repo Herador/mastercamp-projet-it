@@ -318,3 +318,21 @@ body {
   background-color: #b8dbf298; /* fond plus clair au hover */
   box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
+.action-button {
+  background: #509cc8;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(00, 0, 00, 0.2);
+  margin-top: 10px;
+}
+
+.action-button:hover {
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+

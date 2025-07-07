@@ -99,7 +99,7 @@ function displayTrajetOnMap(data) {
     }
 
     if (step.from.lat && step.from.lon) {
-      const pollutionLevelFrom = Math.max(0, Math.min(3, step.from.pollution ?? 1));
+      const pollutionLevelFrom = Math.max(1, Math.min(4, step.from.pollution ?? 1));
       const pollutionIconFrom = L.icon({
         iconUrl: `../static/P${pollutionLevelFrom}.png`,
         iconSize: [25, 25],

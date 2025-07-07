@@ -27,6 +27,20 @@
         <div class="suggestions" id="suggestions"></div>
       </div>
       <a href="/trajet" id="search-btn" class="search-button">Recherche</a>
+      <div>
+        <button id="check-connectivity-btn" class="action-button">Vérifier la connexité</button>
+        <div id="connectivity-result" style="margin: 10px; font-weight: bold;"></div>
+
+
+        <button id="show-acpm-btn" class="action-button">
+          Afficher propagation ACPM
+        </button>
+
+
+        <!--
+        <button id="show-acpm-btn" class="action-button">Afficher propagation ACPM</button>
+        <div id="acpm-container" style="display:none; margin-top: 10px; height: 200px; background: #fff; border-radius: 8px; overflow: hidden;"></div>
+      --></div>
     </div>
 
     <!-- Carte Leaflet -->
@@ -61,7 +75,7 @@
           stopNames.push(stop.name);
 
           if (stop.lat && stop.lon) {
-            const pollutionLevel = Math.max(0, Math.min(3, stop.pollution));
+            const pollutionLevel = Math.max(1, Math.min(4, stop.pollution));
 
             const pollutionIcon = L.icon({
               iconUrl: `../static/P${pollutionLevel}.png`,
@@ -165,10 +179,10 @@
     legend.onAdd = function () {
       const div = L.DomUtil.create('div', 'info legend');
       const levels = [
-        { label: "Faible pollution", icon: "../static/P0.png" },
-        { label: "Pollution moyenne", icon: "../static/P1.png" },
-        { label: "Pollution élevée", icon: "../static/P2.png" },
-        { label: "Pollution très élevée", icon: "../static/P3.png" },
+        { label: "Faible pollution", icon: "../static/P1.png" },
+        { label: "Pollution moyenne", icon: "../static/P2.png" },
+        { label: "Pollution élevée", icon: "../static/P3.png" },
+        { label: "Pollution très élevée", icon: "../static/P4.png" },
       ];
 
       div.innerHTML += "<h4>Niveau de pollution</h4>";
@@ -184,6 +198,57 @@
     };
 
     legend.addTo(map);
+
+
+
+
+
+    const connectivityBtn = document.getElementById("check-connectivity-btn");
+    const connectivityResult = document.getElementById("connectivity-result");
+
+    connectivityBtn.addEventListener("click", () => {
+      // Si le message est déjà visible, on le cache et on arrête là
+      if (connectivityResult.textContent) {
+        connectivityResult.textContent = "";
+        connectivityResult.className = "";
+        return;
+      }
+
+      connectivityResult.textContent = "Chargement...";
+      connectivityResult.className = "loading";
+
+      fetch("http://127.0.0.1/est-connexe")
+        .then(response => response.json())
+        .then(data => {
+          if (data.connected) {
+            connectivityResult.textContent = "Le graphe est connexe.";
+            connectivityResult.className = "success";
+          } else {
+            connectivityResult.textContent = "Le graphe n'est pas connexe.";
+            connectivityResult.className = "error";
+          }
+        })
+        .catch(err => {
+          connectivityResult.textContent = "Erreur lors de la vérification.";
+          connectivityResult.className = "error";
+          console.error(err);
+        });
+    });
+
+
+    
+const showAcpmbtn = document.getElementById('show-acpm-btn');
+
+showAcpmbtn.addEventListener('click', () => {
+  // On sauvegarde les valeurs des inputs dans localStorage
+  localStorage.setItem("depart", departInput.value);
+  localStorage.setItem("arrivee", arriveeInput.value);
+
+  // Puis on redirige vers la page acpm
+  window.location.href = '/acpm-carte';
+});
+
+    
   </script>
 </body>
 </html>
