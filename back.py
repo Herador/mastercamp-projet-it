@@ -5,8 +5,8 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from flask import Flask, jsonify, request, render_template
 import pickle
 from flask_cors import CORS
-from graph.kruskal import kruskal
 from graph.dijkstra import dijkstra, reconstruire_chemin, yen_k_shortest_paths
+from collections import defaultdict
 
 def calculer_poids_ecologique(chemin, graphe_obj):
     poids = 0
@@ -170,9 +170,12 @@ def test_connexite():
         ] if not connected else []
     })
 
+path_apcm = os.path.join(os.path.dirname(__file__), "data/apcm.pkl")
+with open(path_apcm, "rb") as f:
+    arbre = pickle.load(f)
+
 @app.route("/apcm")
 def afficher_apcm():
-    arbre = kruskal(metroGraph.graph)
 
     apcm_geojson = []
     for s1, s2, poids in arbre:
@@ -285,7 +288,6 @@ def get_paths():
 
 @app.route("/api/lines")
 def get_lines():
-    from collections import defaultdict
 
     segments_par_ligne = defaultdict(set)
     seen = set()
@@ -334,6 +336,56 @@ def get_lines():
             })
 
     return jsonify(lignes_geojson)
+
+@app.route("/api/linesapcm")
+def get_lines_apcm():
+
+    segments_par_ligne = defaultdict(set)
+
+    # Dictionnaire pour regrouper les coordonnées par station mère
+    station_coords = {}
+    for stop in metroGraph.stops.values():
+        parent_id = stop.parent_station if stop.parent_station else stop.id
+        if parent_id not in station_coords:
+            station_coords[parent_id] = {
+                "name": stop.name,
+                "lat": stop.lat,
+                "lon": stop.lon
+            }
+
+    for stop1, stop2, _ in arbre:
+        # Infos de ligne (via le graphe initial)
+        info = metroGraph.graph[stop1].get(stop2) or metroGraph.graph[stop2].get(stop1)
+        if not info:
+            continue
+
+        # Parent stations (commerciales)
+        parent1 = stop1.parent_station if stop1.parent_station else stop1.id
+        parent2 = stop2.parent_station if stop2.parent_station else stop2.id
+
+        # Skip if même station commerciale
+        if parent1 == parent2:
+            continue
+
+        coord1 = (round(station_coords[parent1]["lat"], 6), round(station_coords[parent1]["lon"], 6))
+        coord2 = (round(station_coords[parent2]["lat"], 6), round(station_coords[parent2]["lon"], 6))
+        segment = tuple(sorted([coord1, coord2]))
+
+        for route in info["routes"]:
+            if route != "transfer":
+                segments_par_ligne[route].add(segment)
+
+    lignes_geojson = []
+    for route, segments in segments_par_ligne.items():
+        for coord1, coord2 in segments:
+            lignes_geojson.append({
+                "name": f"Ligne {route}",
+                "color": get_line_color(route),
+                "coordinates": [list(coord1), list(coord2)]
+            })
+
+    return jsonify(lignes_geojson)
+
 
 
 def get_line_color(name):

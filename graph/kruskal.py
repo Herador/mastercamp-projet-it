@@ -103,3 +103,8 @@ def test_kruskal():
         print(f"{s1} — {s2} : {poids}")
         poids_total += poids
     print(f"Poids total : {poids_total}")
+
+arbre = kruskal(metroGraph.graph)
+path_apcm = os.path.join(os.path.dirname(__file__), "../data/apcm.pkl")
+with open(path_apcm, "wb") as f:
+    pickle.dump(arbre, f)
