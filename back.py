@@ -179,12 +179,16 @@ path_apcm = os.path.join(os.path.dirname(__file__), "data/apcm.pkl")
 with open(path_apcm, "rb") as f:
     arbre = pickle.load(f)
 
+path_reduit = os.path.join(os.path.dirname(__file__), "data/metro_graph_reduit.pkl")
+with open(path_reduit, "rb") as f:
+    metroGraphReduit = pickle.load(f)
+
 @app.route("/apcm")
 def afficher_apcm():
 
     apcm_geojson = []
     for s1, s2, poids in arbre:
-        infos = metroGraph.graph[s1].get(s2) or metroGraph.graph[s2].get(s1)
+        infos = metroGraphReduit.graph[s1].get(s2) or metroGraphReduit.graph[s2].get(s1)
         lignes = sorted(infos["routes"]) if infos else []
         apcm_geojson.append({
             "from": {
@@ -344,36 +348,15 @@ def get_lines():
 
 @app.route("/api/linesapcm")
 def get_lines_apcm():
-
     segments_par_ligne = defaultdict(set)
 
-    # Dictionnaire pour regrouper les coordonnées par station mère
-    station_coords = {}
-    for stop in metroGraph.stops.values():
-        parent_id = stop.parent_station if stop.parent_station else stop.id
-        if parent_id not in station_coords:
-            station_coords[parent_id] = {
-                "name": stop.name,
-                "lat": stop.lat,
-                "lon": stop.lon
-            }
-
     for stop1, stop2, _ in arbre:
-        # Infos de ligne (via le graphe initial)
-        info = metroGraph.graph[stop1].get(stop2) or metroGraph.graph[stop2].get(stop1)
+        info = metroGraphReduit.graph[stop1].get(stop2) or metroGraphReduit.graph[stop2].get(stop1)
         if not info:
             continue
 
-        # Parent stations (commerciales)
-        parent1 = stop1.parent_station if stop1.parent_station else stop1.id
-        parent2 = stop2.parent_station if stop2.parent_station else stop2.id
-
-        # Skip if même station commerciale
-        if parent1 == parent2:
-            continue
-
-        coord1 = (round(station_coords[parent1]["lat"], 6), round(station_coords[parent1]["lon"], 6))
-        coord2 = (round(station_coords[parent2]["lat"], 6), round(station_coords[parent2]["lon"], 6))
+        coord1 = (round(stop1.lat, 6), round(stop1.lon, 6))
+        coord2 = (round(stop2.lat, 6), round(stop2.lon, 6))
         segment = tuple(sorted([coord1, coord2]))
 
         for route in info["routes"]:

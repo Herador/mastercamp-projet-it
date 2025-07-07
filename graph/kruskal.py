@@ -81,7 +81,7 @@ def kruskal(graphe):
 # Test
 import pickle
 
-path = os.path.join(os.path.dirname(__file__), "../data/metro_graph.pkl")
+path = os.path.join(os.path.dirname(__file__), "../data/metro_graph_reduit.pkl")
 with open(path, "rb") as f:
     metroGraph = pickle.load(f)
 

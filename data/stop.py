@@ -14,7 +14,7 @@ class Stop:
         return hash(self.id)
 
     def __repr__(self):
-        return f"{self.name} ({self.id}), pollution: {getattr(self, 'pollution', 'N/A')}"
+        return f"{self.name} ({self.id})"
 
     
     def __lt__(self, other):
