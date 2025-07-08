@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Trajet Vertiligne</title>
+  <!-- Feuilles de styles Leaflet et styles personnalisés -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="../static/styles.css" />
 </head>
@@ -17,22 +18,27 @@
       <div class="form-box">
         <p class="title">Ton trajet</p>
 
+        <!-- Affichage du départ -->
         <div class="info-title">Départ :</div>
         <div class="info-content" id="depart"></div>
 
+         <!-- Affichage de l'arrivée -->
         <div class="info-title">Arrivée :</div>
         <div class="info-content" id="arrivee"></div>
 
+        <!-- Conteneur pour les deux trajets (rapide et éco) -->
         <div class="info-title">Trajets :</div>
         <div class="trajet-cases">
+          <!-- Trajet le plus rapide -->
           <div id="trajet-rapide" class="trajet-item" tabindex="0" role="button" aria-expanded="false" aria-controls="details-rapide">
-            <div class="trajet-title"><strong>le plus rapide</strong> </div> <!-- titre fixe -->
+            <div class="trajet-title"><strong>Le plus rapide</strong> </div> <!-- titre fixe -->
             <div class="trajet-summary">Chargement...</div>     <!-- durée + icônes -->
             <div id="details-rapide" class="trajet-details"></div>
           </div>
 
+          <!-- Trajet le plus "respirable" (écologique) -->
           <div id="trajet-eco" class="trajet-item" tabindex="0" role="button" aria-expanded="false" aria-controls="details-eco">
-            <div class="trajet-title"><strong>le plus "respirable"</strong> </div> 
+            <div class="trajet-title"><strong>Le plus "respirable"</strong> </div> 
             <div class="trajet-summary">Chargement...</div>             
             <div id="details-eco" class="trajet-details"></div>
           </div>
@@ -41,12 +47,15 @@
       </div>
     </div>
 
+     <!-- Carte Leaflet -->
     <div id="map"></div>
   </div>
 
+  <!-- Script Leaflet -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+  // Initialisation de la carte Leaflet centrée sur Paris
   const map = L.map('map').setView([48.857, 2.35], 13);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
@@ -54,34 +63,38 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
 }).addTo(map);
 
 
-
+ // Récupération du départ et arrivée depuis le localStorage (sinon "Non défini")
 const depart = localStorage.getItem("depart") || "Non défini";
 const arrivee = localStorage.getItem("arrivee") || "Non défini";
 
+  // Affichage dans le HTML
 document.getElementById("depart").textContent = depart;
 document.getElementById("arrivee").textContent = arrivee;
 
-let colorMap = {};
+let colorMap = {};// Objet pour stocker les couleurs des lignes
 
-// Charger couleurs des lignes et ensuite charger les trajets
+// Fonction pour charger les couleurs des lignes depuis l'API
 function loadColorMap() {
   return fetch("http://localhost/api/lines")
     .then(resp => resp.json())
     .then(linesData => {
       linesData.forEach(line => {
+        // On enlève le préfixe "Ligne " du nom pour la clé
         const name = line.name.replace("Ligne ", "");
-        colorMap[name] = line.color;
+        colorMap[name] = line.color;// On stocke la couleur associée
       });
     })
     .catch(error => {
       console.error("Erreur chargement des couleurs lignes :", error);
-      // On laisse colorMap vide, couleurs par défaut seront noires
+       // En cas d'erreur, on laisse colorMap vide => couleurs par défaut noires
     });
 }
 
+// Tableaux pour stocker les markers et polylines affichés sur la carte
 let trajetMarkers = [];
 let trajetLayers = [];
 
+// Fonction pour retirer tous les markers et lignes du trajet sur la carte
 function clearTrajet() {
   trajetMarkers.forEach(marker => map.removeLayer(marker));
   trajetMarkers = [];
@@ -89,18 +102,21 @@ function clearTrajet() {
   trajetLayers = [];
 }
 
+// Fonction pour afficher un trajet sur la carte à partir des données reçues
 function displayTrajetOnMap(data) {
-  clearTrajet();
+  clearTrajet();// On nettoie la carte avant
   if (!data.steps || data.steps.length === 0) return;
 
   data.steps.forEach(step => {
     const lineName = step.routes[0];
     if (!lineName || lineName.toLowerCase().includes("transfer")) {
-      // Ignorer les étapes de transfert
+       // On ignore les étapes de transfert (pas une ligne de métro)
       return;
     }
 
+    // Ajout du marker sur la station de départ de chaque étape avec icône pollution
     if (step.from.lat && step.from.lon) {
+      // Pollution limitée entre 1 et 4 pour choisir l'icône adaptée
       const pollutionLevelFrom = Math.max(1, Math.min(4, step.from.pollution ?? 1));
       const pollutionIconFrom = L.icon({
         iconUrl: `../static/P${pollutionLevelFrom}.png`,
@@ -114,34 +130,41 @@ function displayTrajetOnMap(data) {
     }
 
 
-
-    const color = colorMap[lineName] || "#000000";
+// Trace la ligne entre "from" et "to" avec la couleur associée à la ligne
+    const color = colorMap[lineName] || "#000000"; // noir par défaut si couleur inconnue
     const polyline = L.polyline([[step.from.lat, step.from.lon], [step.to.lat, step.to.lon]], { color: color,
       weight: 10,
       opacity: 0.8,}).addTo(map);
     trajetLayers.push(polyline);
   });
 
+  // Ajuste la vue pour englober tous les markers et lignes
   const group = new L.featureGroup([...trajetMarkers, ...trajetLayers]);
   map.fitBounds(group.getBounds().pad(0.2));
 }
 
+
+// Formate le résumé du trajet (durée + icônes des lignes utilisées)
 function formatSummary(data) {
   const totalMin = Math.round(data.total_duration / 60);
+  // On récupère les lignes uniques (sans les étapes "transfer")
   const uniqueLines = [...new Set(data.steps.map(step => step.routes[0]))]
     .filter(line => line && !line.toLowerCase().includes("transfer"));
+    // Pour chaque ligne, on crée une balise img pour son icône
   const iconsHtml = uniqueLines.map(line => {
-    const imageName = line.toLowerCase().replace("b", "bis");
+    const imageName = line.toLowerCase().replace("b", "bis");// Gestion du "b" (bis)
     return `<img src="../static/${imageName}.png" alt="Ligne ${line}" class="metro-icon" />`;
   }).join(" ");
   return { totalMin, iconsHtml };
 }
 
+// Formate le détail du trajet en HTML (stations, segments, changement, émissions CO2)
 function formatDetails(data) {
   if (data.error) return `<p style="color:red;">Erreur : ${data.error}</p>`;
   if (!data.steps || data.steps.length === 0) return `<p>Pas de chemin trouvé.</p>`;
 
   const totalMin = Math.round(data.total_duration / 60);
+   // Calcul des émissions de CO2 approximatives (en grammes)
   const emissionsMetro = Math.round(((totalMin * 60) * 8.33) / 1000 * 3.8);
   const emissionsVoiture = Math.round(((totalMin * 60) * 8.33) / 1000 * 180);
 
@@ -149,6 +172,8 @@ function formatDetails(data) {
 
   let currentLine = null;
   let segmentStations = [];
+
+  // Fonction interne pour rendre un segment d'une ligne (avec couleur, icône et liste des stations)
 
   function renderSegment(lineName, stations) {
     if (!lineName || lineName.toLowerCase().includes("transfer")) return ""; // ignore transfer lines
@@ -169,18 +194,20 @@ function formatDetails(data) {
     return segmentHtml;
   }
 
+  // Parcours des étapes pour regrouper stations par ligne et gérer changements
   for (let i = 0; i < data.steps.length; i++) {
     const step = data.steps[i];
     const line = step.routes[0];
 
     if (!line || line.toLowerCase().includes("transfer")) {
+      // Étape transfert, on ajoute la station de destination à la liste
       if (segmentStations.length > 0) {
         segmentStations.push(step.to.name);
       }
       continue;
     }
 
-    // Changement de ligne
+    // Si la ligne change, on affiche le segment précédent et on recommence
     if (line !== currentLine) {
       if (segmentStations.length > 0) {
         html += renderSegment(currentLine, segmentStations);
@@ -234,6 +261,7 @@ function loadTrajet(url, containerId, showOnMap = true) {
   fetch(url)
     .then(res => res.json())
     .then(data => {
+       // Trajet rapide
       const container = document.getElementById(containerId);
       const summaryDiv = container.querySelector(".trajet-summary");
       const detailsDiv = container.querySelector(".trajet-details");
