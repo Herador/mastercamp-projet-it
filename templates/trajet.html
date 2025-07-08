@@ -152,7 +152,7 @@ function formatSummary(data) {
     .filter(line => line && !line.toLowerCase().includes("transfer"));
     // Pour chaque ligne, on crée une balise img pour son icône
   const iconsHtml = uniqueLines.map(line => {
-    const imageName = line.toLowerCase().replace("b", "bis");// Gestion du "b" (bis)
+    const imageName = line.toLowerCase().replace("bis", "b");// Gestion du "b" (bis)
     return `<img src="../static/${imageName}.png" alt="Ligne ${line}" class="metro-icon" />`;
   }).join(" ");
   return { totalMin, iconsHtml };
@@ -178,7 +178,7 @@ function formatDetails(data) {
   function renderSegment(lineName, stations) {
     if (!lineName || lineName.toLowerCase().includes("transfer")) return ""; // ignore transfer lines
     const color = colorMap[lineName] || "#000000";
-    const imageName = lineName.toLowerCase().replace("b", "bis");
+    const imageName = lineName.toLowerCase().replace("bis", "b");
     let segmentHtml = `
       <div class="line-segment" style="margin-bottom: 15px;">
         <img src="../static/${imageName}.png" alt="Ligne ${lineName}" class="metro-icon" style="vertical-align:middle; margin-right: 10px;"/>
