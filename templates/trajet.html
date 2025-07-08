@@ -198,38 +198,46 @@ function formatDetails(data) {
   for (let i = 0; i < data.steps.length; i++) {
     const step = data.steps[i];
     const line = step.routes[0];
+    const fromStop = step.from.name;
+    const toStop = step.to.name;
 
     if (!line || line.toLowerCase().includes("transfer")) {
-      // Étape transfert, on ajoute la station de destination à la liste
-      if (segmentStations.length > 0) {
+      if (segmentStations.length > 0 && segmentStations[segmentStations.length - 1] !== step.to.name ) {
         segmentStations.push(step.to.name);
       }
       continue;
     }
 
-    // Si la ligne change, on affiche le segment précédent et on recommence
-    if (line !== currentLine) {
-      if (segmentStations.length > 0) {
-        html += renderSegment(currentLine, segmentStations);
-        if (currentLine !== null) {
-          html += `<div style="margin: 10px 50px; border-left: 4px solid gray; padding-left: 10px; font-style: italic; color: #555;">Changement de métro</div>`;
-        }
-      }
-      currentLine = line;
+    const realLineChange = currentLine && line !== currentLine;
+
+    if (realLineChange) {
+      html += renderSegment(currentLine, segmentStations);
+      html += `<div style="margin: 10px 50px; border-left: 4px solid gray; padding-left: 10px; font-style: italic; color: #555;">Changement de métro</div>`;
       segmentStations = [];
-      segmentStations.push(step.from.name);
     }
 
-    // On regarde la ligne de la prochaine étape
-    const nextStep = data.steps[i + 1];
-    const nextLine = nextStep ? nextStep.routes[0] : null;
+    if (!currentLine) {
+      currentLine = line;
+      segmentStations = [fromStop];
+    }
 
-    if (line === nextLine) {
-      segmentStations.push(step.to.name);
-    } else {
-      segmentStations.push(step.to.name);
+    segmentStations.push(toStop);
+
+    let j = i + 1;
+    let nextRealLine = null;
+    while (j < data.steps.length) {
+      const tempLine = data.steps[j].routes[0];
+      if (!tempLine || tempLine.toLowerCase().includes("transfer")) {
+        j++;
+        continue;
+      }
+      nextRealLine = tempLine;
+      break;
+    }
+
+    if (!nextRealLine || nextRealLine !== line) {
       html += renderSegment(currentLine, segmentStations);
-      if (i < data.steps.length - 1) {
+      if (nextRealLine) {
         html += `<div style="margin: 10px 50px; border-left: 4px solid gray; padding-left: 10px; font-style: italic; color: #555;">Changement de métro</div>`;
       }
       segmentStations = [];
