@@ -76,6 +76,7 @@ document.getElementById("depart").textContent = depart;
 document.getElementById("arrivee").textContent = arrivee;
 
 let colorMap = {};// Objet pour stocker les couleurs des lignes
+let bestEcoPathData = null;
 
 // Fonction pour charger les couleurs des lignes depuis l'API
 function loadColorMap() {
@@ -267,7 +268,7 @@ function formatDetails(data) {
 
   return html;
 }
-
+//=============
 // Charge un trajet, met à jour résumé et détails, affiche sur carte
 function loadTrajet(url, containerId, showOnMap = true) {
   fetch(url)
@@ -323,7 +324,12 @@ function toggleDetails(event) {
     if (container.id === "trajet-rapide") {
       loadTrajet(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`, "trajet-rapide", true);
     } else if (container.id === "trajet-eco") {
-      loadTrajet(`http://localhost/eco-path?from=${depart}&to=${arrivee}`, "trajet-eco", true);
+      if (bestEcoPathData && bestEcoPathData.steps) {
+        detailsDiv.innerHTML = formatDetails(bestEcoPathData);
+        displayTrajetOnMap(bestEcoPathData);
+      } else {
+        detailsDiv.innerHTML = `<p style="color:red;">Erreur lors du chargement du trajet</p>`;
+      }
     }
   }
 }
@@ -343,7 +349,23 @@ function toggleDetails(event) {
 // Initialisation principale : charger couleurs puis trajets sans afficher détails (donc pas afficher sur carte)
 loadColorMap().then(() => {
   loadTrajet(`http://localhost/shortest-path?from=${depart}&to=${arrivee}`, "trajet-rapide", true);
-  loadTrajet(`http://localhost/eco-path?from=${depart}&to=${arrivee}`, "trajet-eco", false);
+
+  fetch(`http://localhost/api/paths?from=${depart}&to=${arrivee}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.error || !data.best_eco_path) {
+        document.getElementById("trajet-eco").querySelector(".trajet-summary").textContent = "Erreur lors du calcul";
+        return;
+      }
+
+      bestEcoPathData = data.best_eco_path;
+      const { totalMin, iconsHtml } = formatSummary(bestEcoPathData);
+      const sumDivEco = document.getElementById("trajet-eco").querySelector(".trajet-summary");
+      sumDivEco.innerHTML = `${iconsHtml} Durée : <strong>${totalMin} min</strong>`;
+    })
+    .catch(() => {
+      document.getElementById("trajet-eco").querySelector(".trajet-summary").textContent = "Erreur lors du calcul";
+    });
 });
 
 // Au démarrage, on veut que les deux cases soient fermées et détails cachés
@@ -354,8 +376,6 @@ loadColorMap().then(() => {
 });
 
 </script>
-
-
 
 </body>
 </html>

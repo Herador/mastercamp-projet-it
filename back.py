@@ -5,27 +5,25 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from flask import Flask, jsonify, request, render_template
 import pickle
 from flask_cors import CORS
-from graph.dijkstra import dijkstra, reconstruire_chemin, yen_k_shortest_paths
+from graph.dijkstra import dijkstra, reconstruire_chemin
 from collections import defaultdict
 
 def calculer_poids_ecologique(chemin, graphe_obj):
     poids = 0
     if len(chemin) < 2:
         return poids
-
-    ligne_prec = graphe_obj.graph[chemin[0]][chemin[1]]["line"]
-
+    lignes_prec = set(graphe_obj.graph[chemin[0]][chemin[1]]["routes"])
     for i in range(1, len(chemin) - 1):
         u = chemin[i]
         v = chemin[i + 1]
-        ligne_actuelle = graphe_obj.graph[u][v]["line"]
-
-        if ligne_actuelle != ligne_prec:
-            stop_obj = graphe_obj.stops.get(u)
-            if stop_obj and hasattr(stop_obj, "pollution"):
-                poids += stop_obj.pollution
-            ligne_prec = ligne_actuelle
-
+        lignes_actuelles = set(graphe_obj.graph[u][v]["routes"])
+        if lignes_actuelles != lignes_prec:
+            stop_obj = graphe_obj.stops.get(u.id)
+            if stop_obj and hasattr(stop_obj, "name"):
+                pollution = getattr(stop_obj, "pollution", 1)
+                poids += pollution
+                print(f"✅ Changement détecté à {stop_obj.name}, pollution ajoutée: {pollution}")
+            lignes_prec = lignes_actuelles
     return poids
 
 path = os.path.join(os.path.dirname(__file__), "data/metro_graph_with_pollution.pkl")
@@ -34,19 +32,32 @@ with open(path, "rb") as f:
 # Après le pickle.load
 for stop in metroGraph.stops.values():
     if not hasattr(stop, "pollution"):
-        stop.pollution = None
+        stop.pollution = 0
 
 # Corriger aussi les sommets dans le graph (clés)
 for stop in metroGraph.graph.keys():
     if not hasattr(stop, "pollution"):
-        stop.pollution = None
+        stop.pollution = 0
 
 # Corriger aussi les stops des voisins
 for voisins in metroGraph.graph.values():
     for voisin_stop in voisins.keys():
         if not hasattr(voisin_stop, "pollution"):
-            voisin_stop.pollution = None
+            voisin_stop.pollution = 0
 
+def graphe_pondere_ecologique(graphe):
+    new_graph = {}
+    for u, voisins in graphe.items():
+        new_graph[u] = {}
+        for v, info in voisins.items():
+            pollution_u = getattr(u, "pollution", 1)
+            pollution_v = getattr(v, "pollution", 1)
+            poids = (pollution_u + pollution_v) / 2 + 0.1  # légère pénalisation
+            new_graph[u][v] = {
+                "duration": poids,
+                "routes": info["routes"]
+            }
+    return new_graph
 
 app = Flask(__name__)
 
@@ -275,22 +286,47 @@ def get_paths():
     chemin_dijkstra = reconstruire_chemin(pred, source, dest)
     poids_dijkstra = calculer_poids_ecologique(chemin_dijkstra, metroGraph)
 
-    # Yen (4 chemins)
-    k_chemins = yen_k_shortest_paths(metroGraph.graph, source, dest, 4)
-    alternative_paths = []
-    for c in k_chemins:
-        poids = calculer_poids_ecologique(c, metroGraph)
-        alternative_paths.append({
-            "steps": [str(stop) for stop in c],
-            "ecological_weight": poids
-        })
+    def generate_steps(chemin):
+        steps = []
+        for i in range(len(chemin) - 1):
+            u = chemin[i]
+            v = chemin[i + 1]
+            info = metroGraph.graph[u][v]
+            steps.append({
+                "from": u.to_dict(),
+                "to": v.to_dict(),
+                "duration": info["duration"],
+                "routes": sorted(info["routes"])
+            })
+        return steps
+
+    def compute_total_duration(chemin):
+        total_duration = sum(
+            metroGraph.graph[chemin[i]][chemin[i + 1]]["duration"]
+            for i in range(len(chemin) - 1)
+        )
+        nb_sommets = len(chemin)
+        intermediate_time = (nb_sommets * 10) - 20
+        return total_duration + intermediate_time
+
+    # Chemin respirable
+    graphe_eco = graphe_pondere_ecologique(metroGraph.graph)
+    distances_eco, pred_eco = dijkstra(graphe_eco, source)
+    chemin_eco = reconstruire_chemin(pred_eco, source, dest)
+    poids_eco = calculer_poids_ecologique(chemin_eco, metroGraph)
+
+    best_eco_path = {
+        "steps": generate_steps(chemin_eco),
+        "ecological_weight": poids_eco,
+        "total_duration": compute_total_duration(chemin_eco)
+    }
 
     return jsonify({
         "fastest_path": {
             "steps": [str(stop) for stop in chemin_dijkstra],
             "ecological_weight": poids_dijkstra
         },
-        "alternative_paths": alternative_paths
+        "best_eco_path": best_eco_path
     })
 
 

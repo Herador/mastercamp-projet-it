@@ -81,7 +81,7 @@
 
             L.marker([stop.lat, stop.lon], { icon: pollutionIcon })
               .addTo(map)
-              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}<br>Pollution: ${stop.pollution}<br>Accessible: ${stop.accessible ? 'Oui' : 'Non'}`);
+              .bindPopup(`<b>${stop.name}</b><br>ID: ${stop.id}<br>Accessible: ${stop.accessible ? 'Oui' : 'Non'}`);
           }
         });
       })
